@@ -1,4 +1,0 @@
-s1_two_stats_in_h_in_array: exit=1 :: X [ERROR] Expected "]" but found ")" |  |     yue-workbench/.dsh-check/s1_two_stats_in_h_in_array.ts:16:7: |       16 │       )),
-s2_two_stats_in_h_in_array_cn: exit=1 :: X [ERROR] Expected "]" but found ")" |  |     yue-workbench/.dsh-check/s2_two_stats_in_h_in_array_cn.ts:16:7: |       16 │       )),
-s3_with_num_call: exit=1 :: X [ERROR] Expected "]" but found ")" |  |     yue-workbench/.dsh-check/s3_with_num_call.ts:15:7: |       15 │       )),
-s4_full_four_stats: exit=1 :: X [ERROR] Expected "]" but found ")" |  |     yue-workbench/.dsh-check/s4_full_four_stats.ts:20:7: |       20 │       )),
