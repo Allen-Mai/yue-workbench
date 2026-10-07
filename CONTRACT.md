@@ -60,13 +60,13 @@ public/              manifest.json / sw.js / icons/
 | `accounts` | kind(`daily`\|`fixed`\|`income`\|`coin`\|`wish`), balance:number, quota:number, month(`YYYY-MM`) |
 | `transactions` | kind(`variable`\|`fixed`\|`income`\|`coin`\|`wish`), amount, category, date, note, photos:string[] |
 | `fixed_items` | name, amount, day:number, active:boolean, last_charged(`YYYY-MM`), skip_months:string[] |
-| `shopping` | name, price, qty, date, status(`pending`\|`bought`), bought_at |
+| `shopping` | name, price, qty, date, status(`pending`\|`bought`), bought_at, category?(自动记账用类别) |
 | `wishes` | title, tier(10\|20\|50\|100), status(`open`\|`done`), date |
 | `gold_prices` | date, intl, domestic, change, high, low |
 | `couple` | start_date, title |
 | `couple_logs` | date, text, photos:string[] |
 | `memos` | date, text, photos:string[] |
-| `reminders` | type(`birthday`\|`contact`\|`custom`), title, calendar(`solar`\|`lunar`), date, advance:number, repeat(`none`\|`yearly`\|`monthly`\|`weekly`), time, contact, phone, note, done_dates:string[] |
+| `reminders` | type(`birthday`\|`contact`\|`custom`), title, calendar(`solar`\|`lunar`), date, advance:number, repeat(`none`\|`yearly`\|`monthly`\|`weekly`), time, contact, phone, note, done_dates:string[], next_due?（由 main.ts 每次心跳写回，供服务端 cron 推送） |
 | `coins` | date, amount, kind(`todo`\|`study`\|`save`\|`combo`), reason |
 | `achievements` | key, unlocked_at |
 | `settings` | key, value (any) |

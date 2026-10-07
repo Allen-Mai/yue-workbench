@@ -692,9 +692,9 @@ export const inspireModule = {
   desc: '好书 · 名句 · 电影 · 知识 · 理财串珠',
 
   badge(): number {
-    const start = weekStart(today());
-    const end = addDays(start, 6);
-    return store.list('reads').filter((r) => r.date >= start && r.date <= end).length;
+    // 侧栏角标只表示「有待处理事项」；本周已读数属于成就类信息，
+    // 放在页面统计卡里展示，这里保持安静（治愈系导航不加噪音）。
+    return 0;
   },
 
   async render(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
