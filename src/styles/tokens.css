@@ -1,0 +1,156 @@
+/* ==========================================================================
+   月月的工作台 · 设计令牌  (治愈森系绿 · 暖米黄护眼)
+   60% 奶油米黄 / 30% 苔藓绿·橡木棕·鼠尾草绿 / 10% 像素红·暖橙·蜂蜜黄
+   ========================================================================== */
+
+:root {
+  /* ---------- 60% 基底：暖奶油纸感（低蓝光护眼） ---------- */
+  --paper: #FBF5E7;
+  --paper-2: #FDF8EC;
+  --paper-3: #F6EFDD;
+  --paper-4: #EFE5CE;
+
+  /* ---------- 30% 辅助：森系绿 + 橡木棕 + 鼠尾草绿 ---------- */
+  --moss: #5A7A4A;
+  --moss-mid: #2D5A3D;
+  --moss-deep: #1A3C2A;
+  --moss-soft: #7DBF8A;
+  --moss-mist: #DCE9D8;
+  --sage: #A8BBA0;
+  --oak: #C4A882;
+  --oak-deep: #9A7B52;
+  --oak-mist: #EFE1C8;
+  --dot: #DCC9A6;
+
+  /* ---------- 10% 强调 ---------- */
+  --red: #D64550;
+  --red-soft: #E9898F;
+  --orange: #E8A87C;
+  --honey: #F0D58C;
+
+  /* ---------- 文字：深棕 / 米白（绝不用纯黑纯白） ---------- */
+  --ink: #3D2C1B;
+  --ink-soft: #6B5842;
+  --ink-faint: #9C8B74;
+  --ink-cream: #FDF8EC;
+  --ink-on-green: #F3F7EE;
+
+  /* ---------- 描边 / 面 ---------- */
+  --line: #E6DAC1;
+  --line-soft: #F1E8D4;
+  --line-green: #CBDCC4;
+  --card: rgba(255, 253, 246, 0.88);
+  --card-solid: #FFFCF4;
+  --card-green: rgba(233, 242, 229, 0.9);
+  --glass: blur(14px) saturate(1.06);
+  --glass-strong: blur(20px) saturate(1.1);
+
+  /* ---------- 暖棕阴影（禁止纯黑阴影） ---------- */
+  --shadow-1: 0 2px 6px rgba(83, 62, 35, 0.05), 0 8px 22px rgba(83, 62, 35, 0.06);
+  --shadow-2: 0 4px 12px rgba(83, 62, 35, 0.08), 0 16px 40px rgba(83, 62, 35, 0.10);
+  --shadow-3: 0 10px 30px rgba(26, 60, 42, 0.16), 0 2px 8px rgba(83, 62, 35, 0.10);
+  --shadow-in: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --shadow-pixel: 3px 3px 0 rgba(61, 44, 27, 0.14);
+
+  /* ---------- 圆角 / 间距 ---------- */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-full: 999px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 30px;
+  --sp-7: 44px;
+
+  /* ---------- 布局 ---------- */
+  --nav-w: 200px;
+  --nav-w-min: 72px;
+  --content-max: 1180px;
+  --tap: 44px;
+
+  /* ---------- 字体 ---------- */
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-pixel: "DotGothic16", "Silkscreen", "PingFang SC", "Microsoft YaHei", monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs: 15px;
+  --fs-md: 16px;
+  --fs-lg: 19px;
+  --fs-xl: 24px;
+  --fs-2xl: 30px;
+  --lh: 1.72;
+
+  /* ---------- 动效（轻柔治愈） ---------- */
+  --dur: 0.28s;
+  --dur-slow: 0.6s;
+  --ease: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- 层级 ---------- */
+  --z-decor: 0;
+  --z-base: 1;
+  --z-nav: 40;
+  --z-modal: 60;
+  --z-banner: 70;
+  --z-toast: 80;
+  --z-lightbox: 90;
+}
+
+/* ================= 护眼三档 ================= */
+html[data-eye="soft"] {
+  --paper: #FBF5E7;
+  --paper-2: #FDF8EC;
+}
+html[data-eye="warm"] {
+  --paper: #F7EEDC;
+  --paper-2: #FAF3E1;
+  --paper-3: #F2E7D0;
+  --card: rgba(253, 247, 234, 0.9);
+  --card-solid: #FDF7EA;
+  --line: #E3D3B4;
+  --ink: #40301D;
+}
+html[data-eye="night"] {
+  --paper: #2A2A22;
+  --paper-2: #32322A;
+  --paper-3: #3A3A31;
+  --paper-4: #44443A;
+  --card: rgba(58, 58, 49, 0.9);
+  --card-solid: #3A3A31;
+  --card-green: rgba(52, 66, 50, 0.9);
+  --line: #4E4E43;
+  --line-soft: #464639;
+  --line-green: #4C5C46;
+  --ink: #EDE6D6;
+  --ink-soft: #C8BFA9;
+  --ink-faint: #9C9482;
+  --ink-cream: #F4EEDF;
+  --moss-mist: #37452F;
+  --oak-mist: #453C2E;
+  --shadow-1: 0 2px 6px rgba(0, 0, 0, 0.22), 0 8px 22px rgba(0, 0, 0, 0.26);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 40px rgba(0, 0, 0, 0.32);
+  --shadow-in: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
+}
+
+/* ================= 字号档 ================= */
+html[data-fs="s"] { --fs: 14px; --fs-md: 15px; --fs-lg: 17px; --fs-xl: 21px; }
+html[data-fs="l"] { --fs: 17px; --fs-md: 18px; --fs-lg: 21px; --fs-xl: 27px; }
+
+/* ================= 圆角档 ================= */
+html[data-round="sharp"] { --r: 10px; --r-sm: 8px; --r-lg: 14px; }
+
+/* ================= 关动效 ================= */
+html[data-motion="off"] * {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}

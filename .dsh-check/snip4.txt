@@ -1,0 +1,6 @@
+a_plain_array_calls: exit=0 :: yue-workbench\.dsh-check\case.js  38b  |  | Done in 5ms
+b_array_call_multiline: exit=0 :: yue-workbench\.dsh-check\case.js  44b  |  | Done in 6ms
+c_array_nested_call_multiline: exit=0 :: yue-workbench\.dsh-check\case.js  88b  |  | Done in 8ms
+d_array_nested_call_plus_string: exit=0 :: yue-workbench\.dsh-check\case.js  102b  |  | Done in 5ms
+e_object_with_array_nested: exit=0 :: yue-workbench\.dsh-check\case.js  105b  |  | Done in 5ms
+f_same_as_d_named_h: exit=0 :: yue-workbench\.dsh-check\case.js  153b  |  | Done in 5ms

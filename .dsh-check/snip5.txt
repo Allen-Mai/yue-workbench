@@ -1,0 +1,5 @@
+ts1_typeonly: exit=0 :: yue-workbench\.dsh-check\ts1_typeonly.out.js  38b  |  | Done in 6ms
+ts2_typeonly_nested: exit=0 :: yue-workbench\.dsh-check\ts2_typeonly_nested.out.js  78b  |  | Done in 6ms
+ts3_realfn: exit=0 :: yue-workbench\.dsh-check\ts3_realfn.out.js  114b  |  | Done in 5ms
+ts4_realfn_array2: exit=0 :: yue-workbench\.dsh-check\ts4_realfn_array2.out.js  152b  |  | Done in 6ms
+js5_realfn_array2: exit=0 :: yue-workbench\.dsh-check\js5_realfn_array2.out.js  152b  |  | Done in 6ms

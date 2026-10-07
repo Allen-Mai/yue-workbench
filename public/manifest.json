@@ -1,0 +1,30 @@
+{
+  "id": "yue-workbench",
+  "name": "月月的工作台 · 像素森系",
+  "short_name": "月月工作台",
+  "description": "像素森系个人工作台：今日中枢、植物养护、灵感补给站、财富工坊、时光胶囊、智能提醒中心、成就殿堂。天地通，年月通，日事通，万事皆成！",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#FDF8EC",
+  "theme_color": "#1A3C2A",
+  "categories": ["productivity", "lifestyle", "health"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/apple-touch-icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "今日中枢", "short_name": "今日", "url": "./index.html#/hub", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "植物养护", "short_name": "植物", "url": "./index.html#/plants", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "财富工坊", "short_name": "记账", "url": "./index.html#/wealth", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "智能提醒", "short_name": "提醒", "url": "./index.html#/remind", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

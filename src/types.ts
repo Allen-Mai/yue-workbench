@@ -1,0 +1,251 @@
+/* ==========================================================================
+   types.ts · 全局类型契约（数据模型 + 模块接口）
+   ========================================================================== */
+
+export interface BaseRow {
+  id: string;
+  user_id: string;
+  created_at: number;
+  updated_at: number;
+}
+
+/* ------------------------------ 今日中枢 ------------------------------ */
+export type TodoSource = 'manual' | 'plant' | 'reminder' | 'study';
+export interface Todo extends BaseRow {
+  title: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm | ''
+  done: boolean;
+  done_at: number | null;
+  source: TodoSource;
+  source_ref: string; // 如 plantId / reminderId / 'en'|'fin'|'news'
+  locked: boolean;
+}
+
+/* ------------------------------ 植物养护 ------------------------------ */
+export type PlantCategory = 'hydro2' | 'hydro10' | 'soil';
+export type PlantStatus = 'seed' | 'sprout' | 'growing' | 'flowering' | 'dormant';
+export interface Plant extends BaseRow {
+  name: string;
+  category: PlantCategory;
+  planted_at: string;
+  status: PlantStatus;
+  note: string;
+}
+export type PlantTag = '换水' | '浇水' | '施肥' | '修剪' | '观察';
+export type PlantFeedback = '发芽' | '生长' | '开花' | '休眠' | '茂盛';
+export interface PlantLog extends BaseRow {
+  plant_id: string;
+  date: string;
+  text: string;
+  tags: PlantTag[];
+  feedback: PlantFeedback;
+  photos: string[];
+}
+
+/* ------------------------------ 灵感补给站 ------------------------------ */
+export type InspireKind = 'book' | 'quote' | 'movie' | 'knowledge' | 'beads' | 'words';
+export interface Inspiration extends BaseRow {
+  kind: InspireKind;
+  title: string;
+  body: string;
+  cover: string;
+  source: string;
+  url: string;
+  tags: string[];
+  favorite: boolean;
+}
+export interface Quote extends BaseRow {
+  text: string;
+  author: string;
+  source: string;
+  tags: string[];
+}
+
+/* ------------------------------ 单词学习 ------------------------------ */
+export interface Word extends BaseRow {
+  word: string;
+  phonetic: string;
+  meaning: string;
+  example: string;
+  example_cn: string;
+  date: string;
+  stage: 'new' | 'review';
+  learned: boolean;
+}
+export interface WordLog extends BaseRow {
+  word_id: string;
+  date: string;
+  correct: boolean;
+  recording: boolean;
+}
+
+/* ------------------------------ 财富工坊 ------------------------------ */
+export type AccountKind = 'daily' | 'fixed' | 'income' | 'coin' | 'wish';
+export interface Account extends BaseRow {
+  kind: AccountKind;
+  name: string;
+  balance: number;
+  quota: number;
+  month: string;
+}
+export type TxKind = 'variable' | 'fixed' | 'income' | 'coin' | 'wish';
+export interface Transaction extends BaseRow {
+  kind: TxKind;
+  amount: number;
+  category: string;
+  date: string;
+  note: string;
+  photos: string[];
+}
+export interface FixedItem extends BaseRow {
+  name: string;
+  amount: number;
+  day: number;
+  active: boolean;
+  last_charged: string;
+  skip_months: string[];
+}
+export interface ShoppingItem extends BaseRow {
+  name: string;
+  price: number;
+  qty: number;
+  date: string;
+  status: 'pending' | 'bought';
+  bought_at: number | null;
+  /** 购买后自动记账时使用的支出类别（餐饮/交通/日用品…） */
+  category?: string;
+}
+export interface Wish extends BaseRow {
+  title: string;
+  tier: 10 | 20 | 50 | 100;
+  status: 'open' | 'done';
+  date: string;
+}
+export interface GoldPrice extends BaseRow {
+  date: string;
+  intl: number;
+  domestic: number;
+  change: number;
+  high: number;
+  low: number;
+}
+
+/* ------------------------------ 时光胶囊 ------------------------------ */
+export interface Couple extends BaseRow {
+  start_date: string;
+  title: string;
+}
+export interface CoupleLog extends BaseRow {
+  date: string;
+  text: string;
+  photos: string[];
+}
+export interface Memo extends BaseRow {
+  date: string;
+  text: string;
+  photos: string[];
+}
+/** 阅读记录（用于金币「已读满 4 篇」与成就统计） */
+export interface ReadRow extends BaseRow {
+  date: string;
+  inspire_id: string;
+  kind: string;
+}
+
+/* ------------------------------ 提醒中心 ------------------------------ */
+export type ReminderType = 'birthday' | 'contact' | 'custom';
+export interface Reminder extends BaseRow {
+  type: ReminderType;
+  title: string;
+  calendar: 'solar' | 'lunar';
+  date: string;
+  advance: number;
+  repeat: 'none' | 'yearly' | 'monthly' | 'weekly';
+  time: string;
+  contact: string;
+  phone: string;
+  note: string;
+  done_dates: string[];
+  /** 客户端计算并写回的下一次到期日（服务端 cron 用它推送） */
+  next_due?: string;
+}
+
+/* ------------------------------ 成就 / 金币 ------------------------------ */
+export type CoinKind = 'todo' | 'study' | 'save' | 'combo';
+export interface Coin extends BaseRow {
+  date: string;
+  amount: number;
+  kind: CoinKind;
+  reason: string;
+}
+export interface AchievementRow extends BaseRow {
+  key: string;
+  unlocked_at: number;
+}
+export interface SettingRow extends BaseRow {
+  key: string;
+  value: unknown;
+}
+export interface PushSubRow extends BaseRow {
+  endpoint: string;
+  keys: Record<string, string>;
+  ua: string;
+}
+
+/* ------------------------------ 表名映射 ------------------------------ */
+export interface TableMap {
+  todos: Todo;
+  plants: Plant;
+  plant_logs: PlantLog;
+  inspirations: Inspiration;
+  quotes: Quote;
+  words: Word;
+  word_logs: WordLog;
+  accounts: Account;
+  transactions: Transaction;
+  fixed_items: FixedItem;
+  shopping: ShoppingItem;
+  wishes: Wish;
+  gold_prices: GoldPrice;
+  couple: Couple;
+  couple_logs: CoupleLog;
+  memos: Memo;
+  reads: ReadRow;
+  reminders: Reminder;
+  coins: Coin;
+  achievements: AchievementRow;
+  settings: SettingRow;
+  push_subs: PushSubRow;
+}
+export type TableName = keyof TableMap;
+export type RowOf<K extends TableName> = TableMap[K];
+
+/* ------------------------------ 模块接口 ------------------------------ */
+export interface ModuleCtx {
+  /** 路由片段：#/<id>/<sub>/<param> —— params = [sub, param] */
+  params: string[];
+  sub: string;
+  param: string;
+  query: URLSearchParams;
+  go(hash: string): void;
+  refresh(module?: string): Promise<void>;
+  /** 注册清理函数，模块切换时自动调用（清定时器、解绑事件） */
+  onCleanup(fn: () => void): void;
+  /** 顶栏标题/副标题控制 */
+  setTitle(title: string, sub?: string): void;
+  setBreadcrumb(items: Array<{ label: string; hash?: string }>): void;
+}
+
+export interface ModuleDef {
+  id: string;
+  title: string;
+  icon: string;
+  order: number;
+  desc?: string;
+  single?: boolean; // 不需要侧栏入口（二级页专用）
+  render(el: HTMLElement, ctx: ModuleCtx): void | Promise<void>;
+  onEnter?(ctx: ModuleCtx): void | Promise<void>;
+  onLeave?(): void;
+  badge?(): number;
+}

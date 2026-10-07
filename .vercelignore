@@ -1,0 +1,9 @@
+.github
+scripts
+supabase
+CONTRACT.md
+.git
+.vscode
+.idea
+coverage
+*.log

@@ -1,0 +1,40 @@
+node at 736: FirstStatement
+FirstStatement @736:3-746:96 :: const stats = Card({\n    icon: 'home',\n    title: `本月固定支出（${monthCN(mo
+  VariableDeclarationList @736:3-746:96 :: const stats = Card({\n    icon: 'home',\n    title: `本月固定支出（${monthCN(mo
+    VariableDeclaration @736:9-746:96 :: stats = Card({\n    icon: 'home',\n    title: `本月固定支出（${monthCN(month)}）
+      Identifier @736:9-736:14 :: stats
+      CallExpression @736:17-746:96 :: Card({\n    icon: 'home',\n    title: `本月固定支出（${monthCN(month)}）`,\n    b
+        Identifier @736:17-736:21 :: Card
+        ObjectLiteralExpression @736:22-746:96 :: {\n    icon: 'home',\n    title: `本月固定支出（${monthCN(month)}）`,\n    body: 
+          PropertyAssignment @737:5-737:17 :: icon: 'home'
+            Identifier @737:5-737:9 :: icon
+            StringLiteral @737:11-737:17 :: 'home'
+          PropertyAssignment @738:5-738:39 :: title: `本月固定支出（${monthCN(month)}）`
+            Identifier @738:5-738:10 :: title
+            TemplateExpression @738:12-738:39 :: `本月固定支出（${monthCN(month)}）`
+              TemplateHead @738:12-738:22 :: `本月固定支出（${
+              TemplateSpan @738:22-738:39 :: monthCN(month)}）`
+                CallExpression @738:22-738:36 :: monthCN(month)
+                LastTemplateToken @738:36-738:39 :: }）`
+          PropertyAssignment @739:5-745:8 :: body: [\n      h('div', { class: 'grid grid-auto' },\n        Stat({ lab
+            Identifier @739:5-739:9 :: body
+            ArrayLiteralExpression @739:11-745:8 :: [\n      h('div', { class: 'grid grid-auto' },\n        Stat({ label: '本
+              CallExpression @740:7-744:134 :: h('div', { class: 'grid grid-auto' },\n        Stat({ label: '本月固定支出', 
+                Identifier @740:7-740:8 :: h
+                StringLiteral @740:9-740:14 :: 'div'
+                ObjectLiteralExpression @740:16-740:43 :: { class: 'grid grid-auto' }
+                CallExpression @741:9-741:101 :: Stat({ label: '本月固定支出', value: fmtMoney(fixedMonth), unit: '元', tone: 
+                CallExpression @742:9-742:104 :: Stat({ label: '本月可变支出', value: fmtMoney(variableMonth), unit: '元', ton
+                CallExpression @743:9-743:86 :: Stat({ label: '固定支出占比', value: ratio, unit: '', tone: 'honey', icon: '
+                CallExpression @744:9-744:133 :: Stat({ label: '固定支出账户余额', value: fmtMoney(num(store.account('fixed')?.
+          MethodDeclaration @746:7-746:95 :: h('div', { class: 'tiny muted mt-2' }, '固定支出走独立账户：不占日常额度、不计入省钱奖励；比例 = 
+            Identifier @746:7-746:8 :: h
+            Parameter @746:9-746:9 :: 
+              Identifier @746:9-746:9 :: 
+            Parameter @746:16-746:44 :: { class: 'tiny muted mt-2' }
+              ObjectBindingPattern @746:16-746:44 :: { class: 'tiny muted mt-2' }
+                BindingElement @746:18-746:24 :: class:
+                BindingElement @746:25-746:42 :: 'tiny muted mt-2'
+            Parameter @746:45-746:45 :: 
+              Identifier @746:45-746:45 :: 
+            Block @746:95-746:95 :: 

@@ -1,0 +1,29 @@
+=== A_toys exit 1 ===
+X [ERROR] Expected "]" but found ")"
+
+    yue-workbench/.dsh-check/snip2.ts:16:7:
+      16 鈹�       )),
+         鈹�        ^
+         鈺�        ]
+
+1 error
+
+=== B_tmpl_ascii exit 1 ===
+X [ERROR] Expected "]" but found ")"
+
+    yue-workbench/.dsh-check/snip2.ts:16:7:
+      16 鈹�       )),
+         鈹�        ^
+         鈺�        ]
+
+1 error
+
+=== C_full_cn exit 1 ===
+X [ERROR] Expected "]" but found ")"
+
+    yue-workbench/.dsh-check/snip2.ts:18:7:
+      18 鈹�       )),
+         鈹�        ^
+         鈺�        ]
+
+1 error
