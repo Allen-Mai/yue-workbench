@@ -25,6 +25,13 @@ export default defineConfig({
       },
     },
   },
-  server: { port: 5173, host: true },
+  server: {
+    port: 5173,
+    host: true,
+    watch: {
+      // 忽略各种临时/校验文件，避免 Windows 上的 EBUSY 把 dev server 拖垮
+      ignored: ['**/node_modules/**', '**/dist/**', '**/.*.tmpdir/**', '**/._*', '**/*.tmp', '**/.dsh-check/**'],
+    },
+  },
   preview: { port: 4173, host: true },
 });

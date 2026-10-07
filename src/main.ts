@@ -11,7 +11,7 @@ import { h, mount, clear, qs } from './ui/dom';
 import { pixelIcon, dogLine } from './ui/icons';
 import { initDecor, backgroundDots } from './ui/decor';
 import { Banner, Button, IconButton, Modal, Toast } from './ui/components';
-import { store } from './core/store';
+import { store, CONTENT_VERSION } from './core/store';
 import * as db from './core/db';
 import { router, type Route } from './core/router';
 import { notify } from './core/notify';
@@ -371,6 +371,21 @@ async function boot(): Promise<void> {
 
   router.on((route) => { void renderRoute(route); });
   router.start();
+
+  // 雅思语料后台增量安装（不阻塞首屏；装好后提示并自动刷新当前页）
+  if (Number(store.setting('contentVersion', 1)) < CONTENT_VERSION) {
+    void store
+      .ensureContent((msg) => Toast(msg))
+      .then((res) => {
+        if (!res) return;
+        Toast(`雅思语料已就绪：${res.words} 个核心词 · ${res.articles} 篇备考文章 · ${res.courses} 门课程 ${res.lessons} 节`, 'success');
+        void renderRoute(router.route());
+      })
+      .catch((err) => {
+        console.error('[main] 雅思语料安装失败', err);
+        Toast('雅思语料安装失败，稍后会自动重试', 'error');
+      });
+  }
 
   store.on('change', () => {
     refreshCoins();

@@ -325,7 +325,7 @@ export const hubModule = {
         card.addEventListener('click', () => void toggleStudy(item.key, ctx));
         return card;
       })),
-      footer: [h('span', { class: 'tiny muted' }, `English 会打开单词学习（5 个新词 + 5 个复习）· 每项 +0.2 金币（每日上限 ${STUDY_DAILY_CAP}）`)],
+      footer: [h('span', { class: 'tiny muted' }, `English 会打开单词学习（雅思核心词库，每日 5 个新词 + 5 个复习）· 每项 +0.2 金币（每日上限 ${STUDY_DAILY_CAP}）`)],
     });
 
     /* -------- 植物养护汇总 -------- */
@@ -438,6 +438,8 @@ export const hubModule = {
         icon: 'clock',
         title: `现在是 ${nowTime()}`,
         body: h('div', { class: 'row row-wrap' },
+          Button('雅思备考', { variant: 'primary', icon: 'inspire', size: 'sm', onClick: () => ctx.go('#/inspire/ielts') }),
+          Button('背单词', { variant: 'soft', icon: 'book', size: 'sm', onClick: () => ctx.go('#/hub/words') }),
           Button('写情侣日志', { variant: 'soft', icon: 'heart', size: 'sm', onClick: () => ctx.go('#/capsule/couple') }),
           Button('记一笔账', { variant: 'soft', icon: 'money', size: 'sm', onClick: () => ctx.go('#/wealth') }),
           Button('看看花园', { variant: 'soft', icon: 'plant', size: 'sm', onClick: () => ctx.go('#/plants') }),

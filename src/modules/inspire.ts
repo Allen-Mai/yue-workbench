@@ -22,10 +22,11 @@ import { settleDay, coinsOn } from '../core/coins';
 import { checkAchievements } from '../core/stats';
 import { QUOTE_TAGS } from '../data/presets';
 import { renderWordStudy } from './words';
+import { renderIelts } from './ielts';
 import type { Inspiration, ModuleCtx, Quote } from '../types';
 
 /* ------------------------------ 分类定义 ------------------------------ */
-type ContentKind = 'book' | 'quote' | 'movie' | 'knowledge' | 'beads';
+type ContentKind = 'book' | 'quote' | 'movie' | 'knowledge' | 'beads' | 'ielts';
 
 interface KindMeta {
   value: ContentKind;
@@ -67,6 +68,11 @@ const KINDS: KindMeta[] = [
     value: 'beads', label: '理财串珠', icon: 'beads', desc: '一颗一颗串起来的理财心得',
     tip: '把攒下来的理财经验串成珠子，一颗一颗来。',
     titleHint: '例如 理财串珠 ⑦：先记三天再谈省钱', bodyHint: '这一颗珠子是什么？怎么用在自己身上？', tagHint: '理财,方法',
+  },
+  {
+    value: 'ielts', label: '雅思备考', icon: 'inspire', desc: '课程 · 备考文章 · 核心词库',
+    tip: '雅思备考专区：四门课逐课精讲、30 篇原创备考文章、1050 个核心词。点进去看课程与文章。',
+    titleHint: '例如 雅思听力 Section 3 怎么听', bodyHint: '写下你的备考心得或错题总结。', tagHint: '雅思,听力',
   },
 ];
 
@@ -701,6 +707,12 @@ export const inspireModule = {
     // 二级页：单词学习（复用 modules/words.ts）
     if (ctx.sub === 'words') {
       await renderWordStudy(el, ctx, { backHash: '#/inspire', backLabel: '灵感补给站' });
+      return;
+    }
+
+    // 雅思备考专区（课程 + 备考文章 + 核心词库，二级页自带三级路由）
+    if (ctx.sub === 'ielts') {
+      await renderIelts(el, ctx);
       return;
     }
 

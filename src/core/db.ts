@@ -14,7 +14,7 @@ export const LOCAL_USER = 'local';
 
 export const TABLES: TableName[] = [
   'todos', 'plants', 'plant_logs', 'inspirations', 'quotes',
-  'words', 'word_logs', 'accounts', 'transactions', 'fixed_items',
+  'words', 'word_logs', 'courses', 'lessons', 'accounts', 'transactions', 'fixed_items',
   'shopping', 'wishes', 'gold_prices', 'couple', 'couple_logs',
   'memos', 'reads', 'reminders', 'coins', 'achievements', 'settings', 'push_subs',
 ];
@@ -161,7 +161,11 @@ export async function put<K extends TableName>(table: K, row: Partial<RowOf<K>>)
   return full;
 }
 
-export async function bulkPut<K extends TableName>(table: K, rows: Array<Partial<RowOf<K>>>): Promise<number> {
+export async function bulkPut<K extends TableName>(
+  table: K,
+  rows: Array<Partial<RowOf<K>>>,
+  opts: { sync?: boolean } = {},
+): Promise<number> {
   if (!rows.length) return 0;
   const full = rows.map((r) => normalize(table, r));
   const db = await openDb();
@@ -173,8 +177,9 @@ export async function bulkPut<K extends TableName>(table: K, rows: Array<Partial
     t.onerror = () => reject(t.error);
   });
   fire(table, 'bulk');
-  if (remote) {
-    for (const r of full) remote.put(table, r as unknown as BaseRow).catch(() => undefined);
+  // 云端：整表一次性 upsert，避免 N 次请求（批量导入 1000+ 条时尤其重要）
+  if (remote && opts.sync !== false) {
+    remote.replaceAll(table, full as unknown as BaseRow[]).catch((e) => console.warn('[db] 云端批量写入失败', table, e));
   }
   return full.length;
 }
@@ -263,7 +268,7 @@ export async function importAll(
     const clean = rows
       .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object')
       .map((r) => ({ ...r, user_id: currentUser }));
-    await bulkPut(t, clean as Array<Partial<RowOf<typeof t>>>);
+    await bulkPut(t, clean as Array<Partial<RowOf<typeof t>>>, { sync: false });
     rowCount += clean.length;
   }
   if (remote) {

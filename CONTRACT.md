@@ -55,8 +55,10 @@ public/              manifest.json / sw.js / icons/
 | `plant_logs` | plant_id, date, text, tags:string[]（换水/浇水/施肥/修剪/观察）, feedback（发芽/生长/开花/休眠/茂盛）, photos:string[] |
 | `inspirations` | kind(`book`\|`quote`\|`movie`\|`knowledge`\|`beads`\|`words`), title, body, cover, source, url, tags:string[], favorite:boolean |
 | `quotes` | text, author, source, tags:string[] |
-| `words` | word, phonetic, meaning, example, example_cn, date, stage(`new`\|`review`), learned:boolean |
+| `words` | word, phonetic, meaning, example, example_cn, date, stage(`new`\|`review`), learned, category?(雅思四类用途), book?(`general`\|`ielts`) |
 | `word_logs` | word_id, date, correct:boolean, recording:boolean |
+| `courses` | slug, title, subtitle, desc, level, cover, order:number, tags:string[] |
+| `lessons` | course_id, unit_no, unit_title, title, kind(listening\|reading\|writing\|speaking\|vocab\|grammar), minutes, body, key_points:string[], exercises:LessonExercise[], order, done, score, done_at |
 | `accounts` | kind(`daily`\|`fixed`\|`income`\|`coin`\|`wish`), balance:number, quota:number, month(`YYYY-MM`) |
 | `transactions` | kind(`variable`\|`fixed`\|`income`\|`coin`\|`wish`), amount, category, date, note, photos:string[] |
 | `fixed_items` | name, amount, day:number, active:boolean, last_charged(`YYYY-MM`), skip_months:string[] |
@@ -222,6 +224,27 @@ export const plantsModule: ModuleDef = {
 5 时光胶囊 `capsule` · 6 智能提醒中心 `remind` · 7 成就殿堂 `trophy` · 8 设置 `settings`
 
 单词学习为二级页：`#/hub/words`（今日中枢每日学习卡进入）与 `#/inspire/words`。
+雅思备考为二级页（挂在灵感补给站下，**不新增侧栏入口**）：
+`#/inspire/ielts`（专区首页）· `#/inspire/ielts/course[/<课程slug>[/<课slug>]]` · `#/inspire/ielts/article[/<文章id>]` · `#/inspire/ielts/words`
+
+---
+
+## 4.1 语料与增量安装（重要）
+
+大段语料（词库、文章、课程）**不进首屏包**，通过 `store.ensureContent()` 动态 import 安装：
+
+```ts
+// main.ts：首屏渲染完成后再后台安装，不阻塞启动
+if (Number(store.setting('contentVersion', 1)) < CONTENT_VERSION) {
+  await store.ensureContent((msg) => Toast(msg));
+}
+```
+
+- `CONTENT_VERSION`（`core/store.ts`）= 1 基础内容 / 2 雅思体系。加新语料时**递增它**，老用户会自动补装。
+- 所有语料用**确定性 id**（`w_ielts_<word>` / `insp_ielts_<slug>` / `course_<slug>` / `lesson_<slug>`），保证幂等。
+- 合并时**必须保留用户进度**：单词的 `date/stage/learned`、文章的 `favorite`、课程的 `done/score/done_at`。
+- 语料文件位置：`src/data/words/part*.ts`（词库分片，每片 150 条）· `src/data/ielts-articles.ts`（备考文章）· `src/data/courses/*.ts`（四门课）。
+- 自检：`npm run check:ielts` 会校验条数、去重、分类配比、音标/释义/例句/翻译格式、课程结构与答案下标。
 
 ---
 

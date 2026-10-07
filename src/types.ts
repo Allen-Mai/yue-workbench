@@ -44,7 +44,7 @@ export interface PlantLog extends BaseRow {
 }
 
 /* ------------------------------ 灵感补给站 ------------------------------ */
-export type InspireKind = 'book' | 'quote' | 'movie' | 'knowledge' | 'beads' | 'words';
+export type InspireKind = 'book' | 'quote' | 'movie' | 'knowledge' | 'beads' | 'words' | 'ielts';
 export interface Inspiration extends BaseRow {
   kind: InspireKind;
   title: string;
@@ -54,6 +54,8 @@ export interface Inspiration extends BaseRow {
   url: string;
   tags: string[];
   favorite: boolean;
+  /** 一句话摘要（雅思备考文章等长文用） */
+  summary?: string;
 }
 export interface Quote extends BaseRow {
   text: string;
@@ -63,6 +65,11 @@ export interface Quote extends BaseRow {
 }
 
 /* ------------------------------ 单词学习 ------------------------------ */
+/** 雅思四类词汇用途（与 data/words/types.ts 保持一致） */
+export type WordCategory = 'listening' | 'reading' | 'writing' | 'speaking';
+/** 词库来源：通用词库 / 雅思词库 */
+export type WordBook = 'general' | 'ielts';
+
 export interface Word extends BaseRow {
   word: string;
   phonetic: string;
@@ -72,12 +79,61 @@ export interface Word extends BaseRow {
   date: string;
   stage: 'new' | 'review';
   learned: boolean;
+  /** 雅思分类；通用词库为空 */
+  category?: WordCategory | '';
+  /** 所属词库 */
+  book?: WordBook;
 }
 export interface WordLog extends BaseRow {
   word_id: string;
   date: string;
   correct: boolean;
   recording: boolean;
+}
+
+/* ------------------------------ 雅思课程 ------------------------------ */
+export type LessonKind = 'listening' | 'reading' | 'writing' | 'speaking' | 'vocab' | 'grammar';
+
+export interface Course extends BaseRow {
+  slug: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  /** 基础 / 进阶 / 冲刺 */
+  level: string;
+  cover: string;
+  order: number;
+  tags: string[];
+}
+
+export interface LessonExercise {
+  /** 题干 */
+  q: string;
+  options: string[];
+  /** 正确选项下标（从 0 开始） */
+  answer: number;
+  /** 解析 */
+  explain: string;
+}
+
+export interface Lesson extends BaseRow {
+  course_id: string;
+  unit_no: number;
+  unit_title: string;
+  title: string;
+  kind: LessonKind;
+  /** 预计用时（分钟） */
+  minutes: number;
+  /** 讲解正文，用 \n\n 分段 */
+  body: string;
+  /** 本课要点 */
+  key_points: string[];
+  exercises: LessonExercise[];
+  order: number;
+  done: boolean;
+  /** 练习得分 0–100，未做为 0 */
+  score: number;
+  done_at: number | null;
 }
 
 /* ------------------------------ 财富工坊 ------------------------------ */
@@ -202,6 +258,8 @@ export interface TableMap {
   quotes: Quote;
   words: Word;
   word_logs: WordLog;
+  courses: Course;
+  lessons: Lesson;
   accounts: Account;
   transactions: Transaction;
   fixed_items: FixedItem;

@@ -812,6 +812,20 @@ function aboutCard(): HTMLElement {
           variant: 'soft', icon: 'refresh',
           onClick: () => location.reload(),
         }),
+        Button('重新安装雅思语料', {
+          variant: 'soft', icon: 'download',
+          title: '重新写入雅思核心词 / 备考文章 / 课程（保留你的学习进度与做题得分）',
+          onClick: guard(async () => {
+            await store.setSetting('contentVersion', 1);
+            const res = await store.ensureContent((m) => Toast(m));
+            if (res) {
+              Toast(`雅思语料已安装：${res.words} 词 · ${res.articles} 篇文章 · ${res.courses} 门课 ${res.lessons} 节${res.duplicates ? `（合并去重 ${res.duplicates} 条）` : ''}`, 'success');
+            } else {
+              Toast('语料已是最新版本', 'success');
+            }
+            repaint();
+          }),
+        }),
         Button('检查更新', {
           variant: 'soft', icon: 'download',
           onClick: guard(async () => {

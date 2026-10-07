@@ -46,7 +46,7 @@ export const PLANT_FEEDBACKS = ['发芽', '生长', '开花', '休眠', '茂盛'
 
 /* ------------------------------ 每日学习三项 ------------------------------ */
 export const STUDY_ITEMS = [
-  { key: 'en', label: '英语单词', icon: 'book', desc: '5 个新词 + 5 个复习' },
+  { key: 'en', label: '英语单词', icon: 'book', desc: '雅思核心词 5 新 + 5 复习' },
   { key: 'fin', label: '理财知识', icon: 'coin', desc: '读一篇理财串珠' },
   { key: 'news', label: '新闻时事', icon: 'news', desc: '浏览今日要闻' },
 ] as const;
@@ -341,4 +341,15 @@ export const DEFAULT_SETTINGS: Record<string, unknown> = {
   goldAlert: 0,
   seeded: false,
   installHintDismissed: false,
+  /** 内容版本：1 = 基础内容；2 = 雅思体系（词库 + 备考文章 + 课程） */
+  contentVersion: 1,
+  /** 单词学习：词库来源 all | general | ielts */
+  wordBook: 'ielts',
+  /** 单词学习：雅思分类筛选 all | listening | reading | writing | speaking */
+  wordCategory: 'all',
+  /** 每日新词数量 */
+  wordsPerDay: 5,
+  /** 雅思课程：最近打开的课程 / 课 */
+  lastCourse: '',
+  lastLesson: '',
 };

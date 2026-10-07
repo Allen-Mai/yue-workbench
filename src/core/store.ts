@@ -12,6 +12,17 @@ import { daysOfThisMonth, today, ym } from './date';
 export type StoreEvent = 'change' | 'route' | 'toast' | 'banner' | 'coins' | 'ready' | 'appearance' | 'cloud';
 type Handler = (payload?: unknown) => void;
 
+/** 当前语料内容版本：1 = 基础内容；2 = 雅思体系（1050 词 + 30 篇备考文章 + 4 门课程 36 节） */
+export const CONTENT_VERSION = 2;
+
+export interface ContentInstallResult {
+  words: number;
+  articles: number;
+  courses: number;
+  lessons: number;
+  duplicates: number;
+}
+
 class Store {
   private cache = new Map<TableName, BaseRow[]>();
   private settings: Record<string, unknown> = { ...DEFAULT_SETTINGS };
@@ -61,6 +72,7 @@ class Store {
 
     await db.bulkPut('words', PRESET_WORDS.map((w, i) => ({
       ...w, date: '', stage: 'new' as const, learned: false,
+      book: 'general' as const, category: '' as const,
       created_at: Date.now() - (PRESET_WORDS.length - i) * 1000,
     })));
 
@@ -77,7 +89,121 @@ class Store {
     })));
 
     await db.put('settings', { key: 'seeded', value: true, id: 'set_seeded' });
+    await db.put('settings', { key: 'contentVersion', value: 1, id: 'set_contentVersion' });
     this.settings.seeded = true;
+    this.settings.contentVersion = 1;
+  }
+
+  /* ------------------------------ 增量内容安装（雅思体系） ------------------------------ */
+  /**
+   * 语料按「内容版本」增量安装，不依赖首次播种：
+   * - 老用户升级也会自动补上新增语料（幂等，确定性 id）
+   * - 合并时**保留用户进度**（单词的 learned/date、文章的 favorite、课程的 done/score）
+   * - 语料用动态 import，不进首屏包
+   */
+  async ensureContent(onProgress?: (msg: string) => void): Promise<ContentInstallResult | null> {
+    const current = Number(this.setting('contentVersion', 1));
+    if (current >= CONTENT_VERSION) return null;
+
+    onProgress?.('正在安装雅思语料…');
+    const [wordMod, articleMod, courseMod] = await Promise.all([
+      import('../data/words'),
+      import('../data/ielts-articles'),
+      import('../data/courses'),
+    ]);
+
+    type Existing = { id: string; [k: string]: unknown };
+    const merge = <T extends { id: string }, E extends Existing>(
+      defs: T[],
+      existing: E[],
+      keep: (def: T, old: E | undefined) => Partial<T>,
+    ): Array<T> => {
+      const map = new Map(existing.map((e) => [e.id, e]));
+      return defs.map((d) => ({ ...d, ...keep(d, map.get(d.id)) }));
+    };
+
+    // 1) 雅思核心词（保留已学状态与分配日期）
+    onProgress?.('正在写入雅思核心词…');
+    const wordId = (w: string) => `w_ielts_${w.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+    const oldWords = this.list('words') as unknown as Array<Existing & { id: string }>;
+    const wordDefs = wordMod.IELTS_WORDS.map((t) => ({
+      id: wordId(t[0]),
+      word: t[0],
+      phonetic: t[1],
+      meaning: t[2],
+      example: t[3],
+      example_cn: t[4],
+      category: t[5],
+      book: 'ielts' as const,
+      date: '',
+      stage: 'new' as 'new' | 'review',
+      learned: false,
+    }));
+    await db.bulkPut('words', merge(wordDefs, oldWords, (_d, old) => (old
+      ? { date: old.date as string, stage: old.stage as 'new' | 'review', learned: Boolean(old.learned) }
+      : {})));
+
+    // 2) 雅思备考文章（并入灵感补给站，kind = 'ielts'；保留收藏状态）
+    onProgress?.('正在整理雅思备考文章…');
+    const oldInsp = this.list('inspirations') as unknown as Array<Existing & { id: string }>;
+    const articleDefs = articleMod.IELTS_ARTICLES.map((a) => ({
+      id: `insp_ielts_${a.slug}`,
+      kind: 'ielts' as const,
+      title: a.title,
+      summary: a.summary,
+      body: a.body,
+      cover: '',
+      source: '原创 · 雅思备考',
+      url: '',
+      tags: a.tags,
+      favorite: false,
+    }));
+    await db.bulkPut('inspirations', merge(articleDefs, oldInsp, (_d, old) => (old ? { favorite: Boolean(old.favorite) } : {})));
+
+    // 3) 课程与课（保留做题进度与得分）
+    onProgress?.('正在建立雅思课程…');
+    const oldLessons = this.list('lessons') as unknown as Array<Existing & { id: string }>;
+    const courseDefs = courseMod.IELTS_COURSES.map((c) => ({
+      id: `course_${c.slug}`,
+      slug: c.slug,
+      title: c.title,
+      subtitle: c.subtitle,
+      desc: c.desc,
+      level: c.level,
+      cover: '',
+      order: c.order,
+      tags: c.tags,
+    }));
+    await db.bulkPut('courses', courseDefs);
+    const lessonDefs = courseMod.IELTS_LESSONS.map((l) => ({
+      id: `lesson_${l.slug}`,
+      course_id: `course_${l.course}`,
+      unit_no: l.unit_no,
+      unit_title: l.unit_title,
+      title: l.title,
+      kind: l.kind,
+      minutes: l.minutes,
+      body: l.body,
+      key_points: l.key_points,
+      exercises: l.exercises,
+      order: l.order,
+      done: false,
+      score: 0,
+      done_at: null as number | null,
+    }));
+    await db.bulkPut('lessons', merge(lessonDefs, oldLessons, (_d, old) => (old
+      ? { done: Boolean(old.done), score: Number(old.score ?? 0), done_at: (old.done_at ?? null) as number | null }
+      : {})));
+
+    await this.setSetting('contentVersion', CONTENT_VERSION);
+    await this.refresh();
+    return {
+      words: wordDefs.length,
+      articles: articleDefs.length,
+      courses: courseDefs.length,
+      lessons: lessonDefs.length,
+      duplicates: wordMod.IELTS_WORD_DUPLICATES.length,
+    };
   }
 
   /* ------------------------------ 读 ------------------------------ */
