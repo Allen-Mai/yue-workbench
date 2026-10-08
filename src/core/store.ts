@@ -12,14 +12,15 @@ import { daysOfThisMonth, today, ym } from './date';
 export type StoreEvent = 'change' | 'route' | 'toast' | 'banner' | 'coins' | 'ready' | 'appearance' | 'cloud';
 type Handler = (payload?: unknown) => void;
 
-/** 当前语料内容版本：1 = 基础内容；2 = 雅思体系（1050 词 + 30 篇备考文章 + 4 门课程 36 节） */
-export const CONTENT_VERSION = 2;
+/** 当前语料内容版本：1 = 基础内容；2 = 雅思体系；3 = 原创听力练习库 */
+export const CONTENT_VERSION = 3;
 
 export interface ContentInstallResult {
   words: number;
   articles: number;
   courses: number;
   lessons: number;
+  listenings: number;
   duplicates: number;
 }
 
@@ -106,10 +107,11 @@ class Store {
     if (current >= CONTENT_VERSION) return null;
 
     onProgress?.('正在安装雅思语料…');
-    const [wordMod, articleMod, courseMod] = await Promise.all([
+    const [wordMod, articleMod, courseMod, listeningMod] = await Promise.all([
       import('../data/words'),
       import('../data/ielts-articles'),
       import('../data/courses'),
+      import('../data/listenings'),
     ]);
 
     type Existing = { id: string; [k: string]: unknown };
@@ -195,6 +197,37 @@ class Store {
       ? { done: Boolean(old.done), score: Number(old.score ?? 0), done_at: (old.done_at ?? null) as number | null }
       : {})));
 
+    // 4) 原创听力练习（保留播放次数、得分与续听位置）
+    onProgress?.('正在整理听力练习库…');
+    const oldListenings = this.list('listenings') as unknown as Array<Existing & { id: string }>;
+    const listeningDefs = listeningMod.LISTENINGS.map((l) => ({
+      id: `lo_${l.slug}`,
+      slug: l.slug,
+      section: l.section,
+      title: l.title,
+      scene: l.scene,
+      level: l.level,
+      minutes: l.minutes,
+      lines: l.lines,
+      questions: l.questions,
+      vocab: l.vocab,
+      tips: l.tips,
+      plays: 0,
+      done: false,
+      score: 0,
+      done_at: null as number | null,
+      last_line: 0,
+    }));
+    await db.bulkPut('listenings', merge(listeningDefs, oldListenings, (_d, old) => (old
+      ? {
+        plays: Number(old.plays ?? 0),
+        done: Boolean(old.done),
+        score: Number(old.score ?? 0),
+        done_at: (old.done_at ?? null) as number | null,
+        last_line: Number(old.last_line ?? 0),
+      }
+      : {})));
+
     await this.setSetting('contentVersion', CONTENT_VERSION);
     await this.refresh();
     return {
@@ -202,6 +235,7 @@ class Store {
       articles: articleDefs.length,
       courses: courseDefs.length,
       lessons: lessonDefs.length,
+      listenings: listeningDefs.length,
       duplicates: wordMod.IELTS_WORD_DUPLICATES.length,
     };
   }

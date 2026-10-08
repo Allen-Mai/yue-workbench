@@ -443,6 +443,27 @@
   background-size: 14px 14px; opacity: 0.6;
 }
 
+/* 听力精听：逐句列表 */
+.lo-line {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: rgba(255, 253, 246, 0.62);
+  cursor: pointer;
+  transition: background var(--dur-soft), border-color var(--dur-soft), transform var(--dur) var(--ease);
+}
+.lo-line:hover { background: var(--card-solid); border-color: var(--line); transform: translateX(2px); }
+.lo-line.is-active {
+  background: linear-gradient(100deg, rgba(233, 242, 229, 0.96), rgba(220, 233, 216, 0.6));
+  border-color: var(--moss-soft);
+  box-shadow: inset 3px 0 0 var(--moss);
+}
+.lo-speaker { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.4px; margin-bottom: 2px; }
+.lo-text { font-size: 15px; line-height: 1.75; color: var(--ink); }
+.lo-cn { font-size: 12px; color: var(--ink-faint); margin-top: 3px; line-height: 1.7; }
+.lo-hidden { font-size: 15px; letter-spacing: 2px; color: var(--ink-faint); opacity: 0.5; user-select: none; }
+
 /* ============================== 表格 ============================== */
 .table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .table th, .table td { padding: 9px 10px; text-align: left; border-bottom: 1px dashed var(--line-soft); }

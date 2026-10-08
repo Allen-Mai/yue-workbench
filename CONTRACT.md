@@ -59,6 +59,7 @@ public/              manifest.json / sw.js / icons/
 | `word_logs` | word_id, date, correct:boolean, recording:boolean |
 | `courses` | slug, title, subtitle, desc, level, cover, order:number, tags:string[] |
 | `lessons` | course_id, unit_no, unit_title, title, kind(listening\|reading\|writing\|speaking\|vocab\|grammar), minutes, body, key_points:string[], exercises:LessonExercise[], order, done, score, done_at |
+| `listenings` | slug, section(1\|2\|3\|4), title, scene, level, minutes, lines:ListeningLineRow[]（speaker/text/cn）, questions:ListeningQuestionRow[], vocab, tips, **进度**：plays, done, score, done_at, last_line |
 | `accounts` | kind(`daily`\|`fixed`\|`income`\|`coin`\|`wish`), balance:number, quota:number, month(`YYYY-MM`) |
 | `transactions` | kind(`variable`\|`fixed`\|`income`\|`coin`\|`wish`), amount, category, date, note, photos:string[] |
 | `fixed_items` | name, amount, day:number, active:boolean, last_charged(`YYYY-MM`), skip_months:string[] |
@@ -225,7 +226,13 @@ export const plantsModule: ModuleDef = {
 
 单词学习为二级页：`#/hub/words`（今日中枢每日学习卡进入）与 `#/inspire/words`。
 雅思备考为二级页（挂在灵感补给站下，**不新增侧栏入口**）：
-`#/inspire/ielts`（专区首页）· `#/inspire/ielts/course[/<课程slug>[/<课slug>]]` · `#/inspire/ielts/article[/<文章id>]` · `#/inspire/ielts/words`
+`#/inspire/ielts`（专区首页）· `#/inspire/ielts/course[/<课程slug>[/<课slug>]]` · `#/inspire/ielts/article[/<文章id>]` · `#/inspire/ielts/words` · `#/inspire/ielts/listening[/<听力slug>]`
+
+### 听力练习的版权红线（强制）
+
+`src/data/listenings/*` 里的听力材料**必须全部原创**：严禁抄录、改写、翻译或复述剑桥雅思真题、官方指南、任何教材（含《新概念英语》）的课文与题目，也不得抓取第三方网站的现成音频/文本。可以模仿雅思的**题型与场景形式**，文字必须自己写。
+播放一律走 `speechSynthesis`（系统语音合成），**不内置任何受版权保护的音频文件**。
+用户若想练真人口音，只能引导其使用官方正版渠道（正版剑桥雅思书附带音频、ielts.org 样题、BBC Learning English 等）。
 
 ---
 

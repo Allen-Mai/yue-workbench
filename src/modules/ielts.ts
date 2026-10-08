@@ -21,6 +21,8 @@ import { fmtDate, today } from '../core/date';
 import { award, coinsOn, settleDay } from '../core/coins';
 import { checkAchievements } from '../core/stats';
 import { renderWordStudy, speak, speakInline } from './words';
+import { renderListening, listeningListView } from './listening';
+import { SECTION_META } from '../data/listenings/types';
 import { currentFilter, stats as wordStats } from '../core/words';
 import type { Course, Inspiration, Lesson, LessonExercise, LessonKind, ModuleCtx } from '../types';
 
@@ -63,6 +65,11 @@ function readIds(): Set<string> {
 }
 function lessonHref(courseSlug: string, lesson: Lesson): string {
   return `#/inspire/ielts/course/${courseSlug}/${lesson.id.replace(/^lesson_/, '')}`;
+}
+
+/** 原创听力练习库条数（雅思课程 → 听力精讲 的配套练习） */
+function listeningCount(): number {
+  return store.list('listenings').length;
 }
 function excerpt(text: string, len = 72): string {
   const s = String(text ?? '').replace(/\s+/g, ' ').trim();
@@ -167,9 +174,10 @@ function hubView(el: HTMLElement, ctx: ModuleCtx, rerender: () => void): void {
     ],
   });
 
-  const entries = h('div', { class: 'grid grid-3' },
+  const entries = h('div', { class: 'grid grid-auto' },
     ...[
       { icon: 'book', title: '雅思课程', desc: `${courses.length} 门课 ${allLessons.length} 节，讲解 + 要点 + 练习判分`, href: '#/inspire/ielts/course' },
+      { icon: 'speaker', title: '听力练习库', desc: `${listeningCount()} 篇原创雅思风格听力，逐句精听 + 变速 + 答题判分`, href: '#/inspire/ielts/listening' },
       { icon: 'news', title: '备考文章', desc: `${list.length} 篇原创：题型技巧、评分标准、备考节奏`, href: '#/inspire/ielts/article' },
       { icon: 'leaf', title: '核心词库', desc: `${ws.ielts} 个雅思核心词，按听力/阅读/写作/口语筛选`, href: '#/inspire/ielts/words' },
     ].map((e) => {
@@ -369,6 +377,50 @@ function courseView(el: HTMLElement, ctx: ModuleCtx, course: Course): void {
     })));
   }
   if (!units.length) blocks.push(EmptyState({ icon: 'seed', title: '这门课还没有内容' }));
+
+  // 听力精讲：追加「配套原创听力练习库」入口（精听播放器 + 答题判分）
+  if (course.slug === 'listening') {
+    const los = store.list('listenings');
+    if (los.length) {
+      blocks.push(SectionTitle('配套听力练习库（原创）', { icon: 'speaker' }));
+      blocks.push(Card({
+        variant: 'green',
+        decor: true,
+        icon: 'speaker',
+        title: `原创雅思风格听力 · ${los.length} 篇`,
+        subtitle: '按 Section 1–4 分场景，用系统语音朗读：可变速、逐句精听、隐藏原文做盲听、答完自动判分',
+        body: [
+          h('div', { class: 'grid grid-auto' },
+            ...[1, 2, 3, 4].map((s) => {
+              const meta = SECTION_META[s as 1 | 2 | 3 | 4];
+              const inSec = los.filter((l) => l.section === s);
+              const done = inSec.filter((l) => l.done).length;
+              return Stat({
+                label: `${meta?.label ?? `S${s}`} · ${meta?.kind ?? ''}`,
+                value: `${done}/${inSec.length}`,
+                unit: '篇',
+                tone: done === inSec.length && inSec.length > 0 ? 'green' : 'oak',
+                icon: meta?.icon ?? 'speaker',
+              });
+            }),
+          ),
+          h('div', { class: 'tiny muted mt-3' },
+            '这些材料是本平台原创内容（不是真题，也不是任何教材的课文），因此可以放心跟读与反复播放。'
+            + '想练真人口音，请使用正版剑桥雅思书附带的官方音频。'),
+        ],
+        footer: [
+          Button('进入练习库', { variant: 'primary', icon: 'arrowRight', onClick: () => ctx.go('#/inspire/ielts/listening') }),
+          Button('随机一篇', {
+            variant: 'soft', icon: 'refresh',
+            onClick: () => {
+              const pick = los[Math.floor(Math.random() * los.length)];
+              if (pick) ctx.go(`#/inspire/ielts/listening/${pick.slug}`);
+            },
+          }),
+        ],
+      }));
+    }
+  }
 
   mount(el, ...blocks);
 }
@@ -725,6 +777,12 @@ export async function renderIelts(el: HTMLElement, ctx: ModuleCtx): Promise<void
     return;
   }
 
+  // 原创听力练习库（雅思课程 → 听力精讲）
+  if (section === 'listening') {
+    await renderListening(el, ctx);
+    return;
+  }
+
   const courses = allCourses();
 
   if (section === 'course') {
@@ -788,7 +846,7 @@ export async function renderIelts(el: HTMLElement, ctx: ModuleCtx): Promise<void
     return;
   }
 
-  ctx.setTitle('雅思备考', '课程 · 备考文章 · 核心词库');
+  ctx.setTitle('雅思备考', '课程 · 听力练习库 · 备考文章 · 核心词库');
   hubView(el, ctx, rerender);
 }
 

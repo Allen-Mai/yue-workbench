@@ -6,6 +6,7 @@ import {
 } from '../src/data/words';
 import { IELTS_ARTICLES } from '../src/data/ielts-articles';
 import { IELTS_COURSES, IELTS_LESSONS } from '../src/data/courses';
+import { LISTENINGS, bySection, wordCount } from '../src/data/listenings';
 
 let fails = 0;
 const ok = (label: string, cond: boolean, extra = '') => {
@@ -66,6 +67,77 @@ ok('每节都挂在存在的课程上', badCourse.length === 0, badCourse.slice(
 ok('每门课 9 节', IELTS_COURSES.every((c) => IELTS_LESSONS.filter((l) => l.course === c.slug).length === 9));
 const noPoints = IELTS_LESSONS.filter((l) => !Array.isArray(l.key_points) || l.key_points.length < 3);
 ok('每节 ≥3 条要点', noPoints.length === 0, noPoints.map((l) => l.slug).join(' '));
+
+console.log('\n=== 原创听力练习 ===');
+ok('听力材料 12 篇', LISTENINGS.length === 12, `实际 ${LISTENINGS.length}`);
+ok('slug 唯一', new Set(LISTENINGS.map((l) => l.slug)).size === LISTENINGS.length);
+for (const s of [1, 2, 3, 4]) {
+  const n = bySection(s as 1 | 2 | 3 | 4).length;
+  ok(`Section ${s} 有 3 篇`, n === 3, `实际 ${n}`);
+}
+const loWordCounts = LISTENINGS.map((l) => ({ slug: l.slug, n: wordCount(l) }));
+const badWords = loWordCounts.filter((x) => x.n < 200 || x.n > 450);
+ok('每篇英文词数 200–450', badWords.length === 0, badWords.map((x) => `${x.slug}=${x.n}`).join(' '));
+const badLines = LISTENINGS.filter((l) => !Array.isArray(l.lines) || l.lines.length < 8);
+ok('每篇 ≥8 行原文', badLines.length === 0, badLines.map((l) => l.slug).join(' '));
+const badQ = LISTENINGS.filter((l) => !Array.isArray(l.questions) || l.questions.length < 4);
+ok('每篇 ≥4 道题', badQ.length === 0, badQ.map((l) => l.slug).join(' '));
+const badLoAns = LISTENINGS.flatMap((l) => (l.questions ?? [])
+  .map((q, i) => ({ slug: l.slug, i, q }))
+  .filter(({ q }) => q.type === 'choice'
+    ? (!Array.isArray(q.options) || q.options.length < 2 || Number(q.answer) < 0 || Number(q.answer) >= q.options.length)
+    : (typeof q.answer !== 'string' || !q.answer.trim())));
+ok('每题答案合法', badLoAns.length === 0, badLoAns.slice(0, 4).map((b) => `${b.slug}#${b.i + 1}`).join(' '));
+/* 数字答案在原文里通常写成英文单词，这里把答案数字化后反查英文拼写 */
+const ONES_W = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS_W = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+function numToWords(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return String(n);
+  if (n < 20) return ONES_W[n] ?? String(n);
+  if (n < 100) return `${TENS_W[Math.floor(n / 10)]}${n % 10 ? ` ${ONES_W[n % 10]}` : ''}`;
+  if (n < 1000) return `${ONES_W[Math.floor(n / 100)]} hundred${n % 100 ? ` and ${numToWords(n % 100)}` : ''}`;
+  if (n < 1000000) {
+    const th = Math.floor(n / 1000);
+    const rest = n % 1000;
+    return `${numToWords(th)} thousand${rest ? ` ${numToWords(rest)}` : ''}`;
+  }
+  return String(n);
+}
+
+const missingInText = LISTENINGS.flatMap((l) => {
+  const full = (l.lines ?? []).map((x) => x.text).join(' ').toLowerCase().replace(/-/g, ' ');
+  return (l.questions ?? [])
+    .filter((q) => {
+      if (q.type !== 'blank') return false;
+      const ans = String(q.answer).toLowerCase().trim();
+      if (full.includes(ans)) return false;
+      if (/^\d+$/.test(ans)) {
+        const words = numToWords(Number(ans));
+        if (full.includes(words)) return false;
+        // 也接受去掉 and 的写法（如 two hundred fifty）
+        if (full.includes(words.replace(/ and /g, ' '))) return false;
+      }
+      return true;
+    })
+    .map((q) => `${l.slug}:${q.answer}`);
+});
+ok('填空答案能在原文找到（含数字英文拼写）', missingInText.length === 0, missingInText.slice(0, 6).join(' '));
+const badVocab = LISTENINGS.filter((l) => !Array.isArray(l.vocab) || l.vocab.length < 4);
+ok('每篇 ≥4 个考点词', badVocab.length === 0, badVocab.map((l) => l.slug).join(' '));
+const badTips = LISTENINGS.filter((l) => !Array.isArray(l.tips) || l.tips.length < 2);
+ok('每篇 ≥2 条考点提示', badTips.length === 0, badTips.map((l) => l.slug).join(' '));
+const cnMissing = LISTENINGS.flatMap((l) => (l.lines ?? []).filter((x) => !x.cn).map(() => l.slug));
+ok('每行原文都有中文翻译', cnMissing.length === 0, Array.from(new Set(cnMissing)).join(' '));
+const apostrophe = LISTENINGS.flatMap((l) => [
+  ...(l.lines ?? []).filter((x) => /['\u2018\u2019]/.test(x.text)).map(() => l.slug),
+  ...(l.questions ?? []).filter((q) => /['\u2018\u2019]/.test(q.q)).map(() => l.slug),
+]);
+ok('原文/题干无撇号（防 TS 截断）', apostrophe.length === 0, Array.from(new Set(apostrophe)).join(' '));
+const speakerCount = LISTENINGS.map((l) => ({ slug: l.slug, n: new Set((l.lines ?? []).map((x) => x.speaker)).size }));
+const badSpeakers = speakerCount.filter((x) => x.n < 1 || x.n > 3);
+ok('说话人数 1–3', badSpeakers.length === 0, badSpeakers.map((x) => `${x.slug}=${x.n}`).join(' '));
+console.log('     词数分布：' + loWordCounts.map((x) => `${x.slug}:${x.n}`).join('  '));
 
 console.log(fails ? `\n${fails} 项失败` : '\n全部通过 ✓');
 process.exit(fails ? 1 : 0);

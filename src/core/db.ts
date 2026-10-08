@@ -9,15 +9,16 @@ import type { TableName, TableMap, RowOf, BaseRow } from '../types';
 import { uid } from '../ui/dom';
 
 export const DB_NAME = 'yue-workbench';
-/** 版本历史：1 = 基础 21 张表；2 = 新增 courses / lessons（雅思课程）
+/** 版本历史：1 = 基础 21 张表；2 = 新增 courses / lessons（雅思课程）；
+ *  3 = 新增 listenings（原创听力练习）。
  *  注意：每新增一张表都必须把这里 +1，否则老用户的库里没有新表，
  *  读取时会抛 NotFoundError。openDb() 里还有一层自愈兜底，双保险。 */
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 export const LOCAL_USER = 'local';
 
 export const TABLES: TableName[] = [
   'todos', 'plants', 'plant_logs', 'inspirations', 'quotes',
-  'words', 'word_logs', 'courses', 'lessons', 'accounts', 'transactions', 'fixed_items',
+  'words', 'word_logs', 'courses', 'lessons', 'listenings', 'accounts', 'transactions', 'fixed_items',
   'shopping', 'wishes', 'gold_prices', 'couple', 'couple_logs',
   'memos', 'reads', 'reminders', 'coins', 'achievements', 'settings', 'push_subs',
 ];

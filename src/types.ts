@@ -136,6 +136,48 @@ export interface Lesson extends BaseRow {
   done_at: number | null;
 }
 
+/* ------------------------------ 原创听力练习 ------------------------------ */
+export interface ListeningLineRow {
+  /** 说话人标签：Narrator / Student / Tutor / Guide… */
+  speaker: string;
+  /** 英文原文（逐行朗读、逐行高亮） */
+  text: string;
+  /** 中文翻译 */
+  cn?: string;
+}
+
+export interface ListeningQuestionRow {
+  type: 'choice' | 'blank';
+  q: string;
+  options?: string[];
+  /** choice：正确选项下标；blank：标准答案（英文小写） */
+  answer: number | string;
+  explain: string;
+}
+
+export interface ListeningRow extends BaseRow {
+  slug: string;
+  /** 1–4，对应雅思听力四个 Section */
+  section: number;
+  title: string;
+  scene: string;
+  level: string;
+  minutes: number;
+  lines: ListeningLineRow[];
+  questions: ListeningQuestionRow[];
+  vocab: Array<{ word: string; meaning: string }>;
+  tips: string[];
+  /* ---- 用户进度 ---- */
+  /** 累计播放次数 */
+  plays: number;
+  /** 是否完成过答题（得分 ≥60） */
+  done: boolean;
+  score: number;
+  done_at: number | null;
+  /** 上次听到第几行（续听） */
+  last_line: number;
+}
+
 /* ------------------------------ 财富工坊 ------------------------------ */
 export type AccountKind = 'daily' | 'fixed' | 'income' | 'coin' | 'wish';
 export interface Account extends BaseRow {
@@ -260,6 +302,7 @@ export interface TableMap {
   word_logs: WordLog;
   courses: Course;
   lessons: Lesson;
+  listenings: ListeningRow;
   accounts: Account;
   transactions: Transaction;
   fixed_items: FixedItem;

@@ -438,7 +438,7 @@ async function boot(): Promise<void> {
         .ensureContent((msg) => Toast(msg))
         .then((res) => {
           if (!res) return;
-          Toast(`雅思语料已就绪：${res.words} 个核心词 · ${res.articles} 篇备考文章 · ${res.courses} 门课程 ${res.lessons} 节`, 'success');
+          Toast(`雅思语料已就绪：${res.words} 个核心词 · ${res.articles} 篇备考文章 · ${res.courses} 门课程 ${res.lessons} 节 · ${res.listenings} 篇听力练习`, 'success');
           void renderRoute(router.route());
         })
         .catch((err) => {
