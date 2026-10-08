@@ -24,8 +24,8 @@ import type { ModuleCtx, Word, WordCategory } from '../types';
 
 /* ------------------------------ 发音 ------------------------------ */
 /** 朗读文本（可传入按钮，朗读期间给它加上呼吸动画）
- *  - 英文：优先英式音源；句子正常语速，单词放慢便于跟读
- *  - 中文：优先普通话音源，正常语速
+ *  - 中文：正常倍速（1.0），优先普通话音源
+ *  - 英文：优先英式音源；句子 0.92，单词放慢到 0.86 便于跟读
  */
 export function speak(text: string, lang = 'en-US', btn?: HTMLElement | null, onEnd?: () => void): void {
   try {
@@ -44,7 +44,8 @@ export function speak(text: string, lang = 'en-US', btn?: HTMLElement | null, on
     u.lang = lang;
     const isCJK = /[\u4e00-\u9fa5]/.test(raw);
     const words = raw.split(/\s+/).filter(Boolean).length;
-    u.rate = isCJK ? 0.95 : words > 2 ? 0.92 : 0.86;
+    // 中文一律正常倍速；英文句子略慢、单词更慢，方便跟读
+    u.rate = isCJK ? 1 : words > 2 ? 0.92 : 0.86;
     u.pitch = 1;
 
     const voices = window.speechSynthesis.getVoices();
