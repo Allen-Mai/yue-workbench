@@ -22,6 +22,7 @@ import { award, coinsOn, settleDay } from '../core/coins';
 import { checkAchievements } from '../core/stats';
 import { renderWordStudy, speak, speakInline } from './words';
 import { renderListening, listeningListView } from './listening';
+import { renderAudio } from './audio';
 import { SECTION_META } from '../data/listenings/types';
 import { currentFilter, stats as wordStats } from '../core/words';
 import type { Course, Inspiration, Lesson, LessonExercise, LessonKind, ModuleCtx } from '../types';
@@ -183,6 +184,7 @@ function hubView(el: HTMLElement, ctx: ModuleCtx, rerender: () => void): void {
     ...[
       { icon: 'book', title: '雅思课程', desc: `${courses.length} 门课 ${allLessons.length} 节，讲解 + 要点 + 练习判分`, href: '#/inspire/ielts/course' },
       { icon: 'speaker', title: '听力练习库', desc: `${listeningCount()} 篇原创雅思风格听力，逐句精听 + 变速 + 答题判分`, href: '#/inspire/ielts/listening' },
+      { icon: 'upload', title: '我的听力音频', desc: '导入你自己合法持有的音频（可配同名 SRT/VTT 字幕），变速 · A-B 复读 · 字幕同步', href: '#/inspire/ielts/audio' },
       { icon: 'news', title: '备考文章', desc: `${list.length} 篇原创：题型技巧、评分标准、备考节奏`, href: '#/inspire/ielts/article' },
       { icon: 'leaf', title: '核心词库', desc: `${ws.ielts} 个雅思核心词，按听力/阅读/写作/口语筛选`, href: '#/inspire/ielts/words' },
     ].map((e) => {
@@ -791,6 +793,12 @@ export async function renderIelts(el: HTMLElement, ctx: ModuleCtx): Promise<void
   // 原创听力练习库（雅思课程 → 听力精讲）
   if (section === 'listening') {
     await renderListening(el, ctx);
+    return;
+  }
+
+  // 我的听力音频（用户自己合法持有的音频 + 字幕，仅本机）
+  if (section === 'audio') {
+    await renderAudio(el, ctx);
     return;
   }
 

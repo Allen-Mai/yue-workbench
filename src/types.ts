@@ -322,6 +322,42 @@ export interface BookRow extends BaseRow {
   shelf?: string;
 }
 
+/* ------------------------------ 我的听力音频（仅本机，永不上云/导出） ------------------------------ */
+export interface AudioCueRow {
+  /** 秒 */
+  start: number;
+  end: number;
+  text: string;
+}
+
+export interface AudioRow extends BaseRow {
+  title: string;
+  /** 来源说明（用户自己填，如「正版新概念 第 1 册 Lesson 1」） */
+  source: string;
+  fileName: string;
+  mime: string;
+  size: number;
+  /** 时长（秒），探测失败为 0 */
+  duration: number;
+  /** 音频原始文件（Blob，仅本机保存） */
+  audio?: Blob;
+  /** 字幕时间轴（SRT/VTT/带时间戳文本解析所得），可为空 */
+  cues: AudioCueRow[];
+  /** 纯文本原文（无时间轴时使用） */
+  transcript: string;
+  tags: string[];
+  /* ---- 播放进度 ---- */
+  /** 上次播放位置（秒） */
+  lastPos: number;
+  /** 上次倍速 */
+  rate: number;
+  plays: number;
+  finished: boolean;
+  /** A-B 复读区间（秒），0 表示未设置 */
+  abStart: number;
+  abEnd: number;
+}
+
 /* ------------------------------ 表名映射 ------------------------------ */
 export interface TableMap {
   todos: Todo;
@@ -350,6 +386,7 @@ export interface TableMap {
   settings: SettingRow;
   push_subs: PushSubRow;
   books: BookRow;
+  audios: AudioRow;
 }
 export type TableName = keyof TableMap;
 export type RowOf<K extends TableName> = TableMap[K];

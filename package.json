@@ -16,7 +16,8 @@
     "check:date": "esbuild scripts/check-date.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/check-date.mjs --log-level=error && node node_modules/.cache/check-date.mjs",
     "check:rules": "esbuild scripts/check-rules.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/check-rules.mjs --log-level=error && node node_modules/.cache/check-rules.mjs",
     "check:ielts": "esbuild scripts/check-ielts.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/check-ielts.mjs --log-level=error && node node_modules/.cache/check-ielts.mjs",
-    "check": "npm run typecheck && npm run check:date && npm run check:rules && npm run check:ielts"
+    "check:subtitle": "esbuild scripts/check-subtitle.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/check-subtitle.mjs --log-level=error && node node_modules/.cache/check-subtitle.mjs",
+    "check": "npm run typecheck && npm run check:date && npm run check:rules && npm run check:ielts && npm run check:subtitle"
   },
   "dependencies": {
     "web-push": "^3.6.7"

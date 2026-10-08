@@ -439,6 +439,7 @@ export const hubModule = {
         title: `现在是 ${nowTime()}`,
         body: h('div', { class: 'row row-wrap' },
           Button('雅思听力练习', { variant: 'primary', icon: 'speaker', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/listening') }),
+          Button('我的音频', { variant: 'soft', icon: 'upload', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/audio') }),
           Button('雅思备考', { variant: 'soft', icon: 'inspire', size: 'sm', onClick: () => ctx.go('#/inspire/ielts') }),
           Button('背单词', { variant: 'soft', icon: 'book', size: 'sm', onClick: () => ctx.go('#/hub/words') }),
           Button('写情侣日志', { variant: 'soft', icon: 'heart', size: 'sm', onClick: () => ctx.go('#/capsule/couple') }),

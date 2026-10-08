@@ -261,6 +261,7 @@ export function listeningListView(el: HTMLElement, ctx: ModuleCtx, backHash = '#
     title: '原创听力练习库',
     subtitle: '全部素材由本地语音合成朗读，可变速、逐句精听、隐藏原文做盲听',
     actions: [
+      Button('我的音频', { variant: 'soft', icon: 'upload', size: 'sm', title: '导入你自己合法持有的音频（可配字幕）', onClick: () => ctx.go('#/inspire/ielts/audio') }),
       backHash ? Button('返回雅思专区', { variant: 'ghost', icon: 'arrowLeft', size: 'sm', onClick: () => ctx.go(backHash) }) : null,
     ],
     body: [
