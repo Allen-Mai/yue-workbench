@@ -23,50 +23,80 @@ import { exporter } from '../core/exporter';
 import type { ModuleCtx, Word, WordCategory } from '../types';
 
 /* ------------------------------ 发音 ------------------------------ */
-/** 朗读英文（可传入按钮，朗读期间给它加上呼吸动画） */
-export function speak(text: string, lang = 'en-US', btn?: HTMLElement | null): void {
+/** 朗读文本（可传入按钮，朗读期间给它加上呼吸动画）
+ *  - 英文：优先英式音源；句子正常语速，单词放慢便于跟读
+ *  - 中文：优先普通话音源，正常语速
+ */
+export function speak(text: string, lang = 'en-US', btn?: HTMLElement | null, onEnd?: () => void): void {
   try {
+    const raw = String(text ?? '').trim();
+    if (!raw) {
+      onEnd?.();
+      return;
+    }
     if (!('speechSynthesis' in window)) {
       Toast('当前浏览器不支持朗读', 'error');
+      onEnd?.();
       return;
     }
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text ?? ''));
+    const u = new SpeechSynthesisUtterance(raw);
     u.lang = lang;
-    // 单词读得慢一点便于跟读，句子用正常语速
-    u.rate = String(text).trim().split(/\s+/).length > 2 ? 0.92 : 0.86;
+    const isCJK = /[\u4e00-\u9fa5]/.test(raw);
+    const words = raw.split(/\s+/).filter(Boolean).length;
+    u.rate = isCJK ? 0.95 : words > 2 ? 0.92 : 0.86;
     u.pitch = 1;
+
     const voices = window.speechSynthesis.getVoices();
-    const prefer = lang.toLowerCase().startsWith('en')
-      ? voices.find((x) => /en-GB/i.test(x.lang)) ?? voices.find((x) => /^en/i.test(x.lang))
-      : voices.find((x) => x.lang?.toLowerCase().startsWith(lang.slice(0, 2)));
-    if (prefer) u.voice = prefer;
-    if (btn) {
-      const stop = () => btn.classList.remove('is-speaking');
-      u.onend = stop;
-      u.onerror = stop;
-      btn.classList.add('is-speaking');
-      // 兜底：某些浏览器 onend 不触发
-      window.setTimeout(stop, Math.max(2500, String(text).length * 90));
+    const lower = lang.toLowerCase();
+    let prefer: SpeechSynthesisVoice | undefined;
+    if (lower.startsWith('zh')) {
+      prefer = voices.find((x) => /zh[-_]?(CN|Hans)|cmn[-_]?Hans/i.test(x.lang))
+        ?? voices.find((x) => /zh|cmn/i.test(x.lang));
+    } else if (lower.startsWith('en')) {
+      prefer = voices.find((x) => /en[-_]GB/i.test(x.lang)) ?? voices.find((x) => /^en/i.test(x.lang));
+    } else {
+      prefer = voices.find((x) => x.lang?.toLowerCase().startsWith(lower.slice(0, 2)));
     }
+    if (prefer) u.voice = prefer;
+
+    const done = () => {
+      btn?.classList.remove('is-speaking');
+      onEnd?.();
+    };
+    u.onend = done;
+    u.onerror = done;
+    if (btn) btn.classList.add('is-speaking');
+    // 兜底：部分浏览器 onend 不触发
+    window.setTimeout(done, Math.max(2600, raw.length * (isCJK ? 260 : 95)));
     window.speechSynthesis.speak(u);
   } catch (err) {
     console.warn('[words] 朗读失败', err);
+    onEnd?.();
   }
 }
 
-/** 行内小喇叭：点击朗读给定英文，朗读期间有呼吸动画 */
-export function speakInline(text: string, title = '朗读'): HTMLButtonElement {
+export interface SpeakInlineOptions {
+  /** 朗读语言：英文例句用 en-US，中文翻译用 zh-CN */
+  lang?: string;
+  /** 图标像素尺寸 */
+  size?: number;
+  /** 弱化样式（用于中文翻译这种次要朗读） */
+  soft?: boolean;
+}
+
+/** 行内小喇叭：点击朗读给定文本，朗读期间有呼吸动画 */
+export function speakInline(text: string, title = '朗读', opts: SpeakInlineOptions = {}): HTMLButtonElement {
   const btn = h('button', {
     type: 'button',
-    class: 'speak-inline',
+    class: `speak-inline ${opts.soft ? 'is-soft' : ''}`.trim(),
     title,
     'aria-label': title,
   });
-  btn.appendChild(pixelIcon('speaker', 15, { color: 'var(--moss-mid)' }));
+  btn.appendChild(pixelIcon('speaker', opts.size ?? 15, { color: opts.soft ? 'var(--ink-faint)' : 'var(--moss-mid)' }));
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    speak(text, 'en-US', btn);
+    speak(text, opts.lang ?? 'en-US', btn);
   });
   return btn;
 }
@@ -178,13 +208,19 @@ function wordCard(word: Word, opts: { stage: 'new' | 'review'; onDone: () => voi
       playMine,
     ],
     body: [
-      h('div', { class: 'small', style: 'margin-bottom:6px' }, h('b', null, word.meaning)),
+      h('div', { class: 'quote-line', style: 'margin-bottom:6px' },
+        speakInline(word.meaning, '朗读中文释义', { lang: 'zh-CN', size: 13, soft: true }),
+        h('span', { class: 'small' }, h('b', null, word.meaning)),
+      ),
       h('div', { class: 'quote-block' },
         h('div', { class: 'quote-line' },
-          speakInline(word.example, '朗读例句'),
+          speakInline(word.example, '朗读英文例句'),
           h('span', null, word.example),
         ),
-        h('div', { class: 'muted tiny', style: 'margin-top:6px;padding-left:37px' }, word.example_cn),
+        h('div', { class: 'quote-line', style: 'margin-top:6px' },
+          speakInline(word.example_cn, '朗读中文翻译', { lang: 'zh-CN', size: 13, soft: true }),
+          h('span', { class: 'muted tiny' }, word.example_cn),
+        ),
       ),
     ],
     footer: [

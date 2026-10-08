@@ -524,6 +524,25 @@
   animation: pulse 1.5s var(--ease-soft) infinite;
 }
 .speak-inline:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(125, 191, 138, 0.3); }
+
+/* 弱化版（中文翻译朗读）：不抢视觉重心 */
+.speak-inline.is-soft {
+  width: 24px; height: 24px; min-height: 24px;
+  background: transparent;
+  border-color: var(--line);
+  opacity: 0.72;
+}
+.speak-inline.is-soft:hover {
+  opacity: 1;
+  background: var(--oak-mist);
+  border-color: var(--oak);
+  box-shadow: none;
+}
+.speak-inline.is-soft.is-speaking {
+  opacity: 1;
+  background: var(--oak-mist);
+  border-color: var(--oak);
+}
 .article-body { font-size: var(--fs); line-height: 1.95; color: var(--ink-soft); word-break: break-word; }
 .article-body h3 { margin: var(--sp-4) 0 var(--sp-2); color: var(--ink); }
 .article-body img { border-radius: var(--r-sm); margin: var(--sp-3) 0; }

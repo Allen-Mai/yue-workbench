@@ -20,7 +20,7 @@ import { store } from '../core/store';
 import { fmtDate, today } from '../core/date';
 import { award, coinsOn, settleDay } from '../core/coins';
 import { checkAchievements } from '../core/stats';
-import { renderWordStudy, speakInline } from './words';
+import { renderWordStudy, speak, speakInline } from './words';
 import { currentFilter, stats as wordStats } from '../core/words';
 import type { Course, Inspiration, Lesson, LessonExercise, LessonKind, ModuleCtx } from '../types';
 
@@ -88,6 +88,30 @@ function bodyParagraph(para: string): HTMLElement {
     speakInline(en.join(' '), '朗读本段英文例句'),
     h('span', null, text),
   );
+}
+
+/** 整篇朗读按钮（中文），可再次点击停止 */
+function readAloudButton(getText: () => string, label = '朗读全文'): HTMLButtonElement {
+  let speaking = false;
+  const btn = Button(label, { variant: 'ghost', icon: 'speaker', size: 'sm', title: '用系统中文语音朗读本文，再次点击可停止' });
+  const paint = () => {
+    clear(btn);
+    btn.appendChild(pixelIcon(speaking ? 'close' : 'speaker', 16));
+    btn.appendChild(document.createTextNode(speaking ? ' 停止朗读' : ` ${label}`));
+  };
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (speaking) {
+      try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+      speaking = false;
+      paint();
+      return;
+    }
+    speaking = true;
+    paint();
+    speak(getText(), 'zh-CN', null, () => { speaking = false; paint(); });
+  });
+  return btn;
 }
 
 /* ==========================================================================
@@ -382,6 +406,7 @@ function lessonView(el: HTMLElement, ctx: ModuleCtx, course: Course, lesson: Les
     title: lesson.title,
     subtitle: `${lesson.unit_title} · ${meta.label} · 约 ${lesson.minutes} 分钟`,
     actions: [
+      readAloudButton(() => `${lesson.title}。${lesson.body ?? ''}`, '朗读讲解'),
       Button('返回课程', { variant: 'ghost', icon: 'arrowLeft', size: 'sm', onClick: () => ctx.go(`#/inspire/ielts/course/${course.slug}`) }),
     ],
     body: [
@@ -632,7 +657,7 @@ function articleDetailView(el: HTMLElement, ctx: ModuleCtx, article: Inspiration
   const bodyEl = h('div', { class: 'article-body' });
   for (const para of String(article.body ?? '').split('\n')) {
     if (!para.trim()) continue;
-    bodyEl.appendChild(h('p', { style: 'margin:0 0 13px' }, para.trim()));
+    bodyEl.appendChild(bodyParagraph(para));
   }
 
   const markRead = async () => {
@@ -663,6 +688,7 @@ function articleDetailView(el: HTMLElement, ctx: ModuleCtx, article: Inspiration
     title: article.title,
     subtitle: `${article.source} · ${(article.tags ?? []).join(' / ')}`,
     actions: [
+      readAloudButton(() => `${article.title}。${article.body}`),
       Button('返回列表', { variant: 'ghost', icon: 'arrowLeft', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/article') }),
     ],
     body: h('div', { class: 'row row-wrap' },
@@ -690,6 +716,9 @@ export async function renderIelts(el: HTMLElement, ctx: ModuleCtx): Promise<void
   const section = ctx.params[1] ?? '';
   const slug = ctx.params[2] ?? '';
   const rerender = () => { void renderIelts(el, ctx); };
+
+  // 切换页面时停止正在进行的朗读，避免声音跟着跑到别的页面
+  try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
 
   if (section === 'words') {
     await renderWordStudy(el, ctx, { backHash: '#/inspire/ielts', backLabel: '雅思备考' });
