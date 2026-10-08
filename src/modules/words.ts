@@ -23,25 +23,52 @@ import { exporter } from '../core/exporter';
 import type { ModuleCtx, Word, WordCategory } from '../types';
 
 /* ------------------------------ 发音 ------------------------------ */
-export function speak(text: string, lang = 'en-US'): void {
+/** 朗读英文（可传入按钮，朗读期间给它加上呼吸动画） */
+export function speak(text: string, lang = 'en-US', btn?: HTMLElement | null): void {
   try {
     if (!('speechSynthesis' in window)) {
       Toast('当前浏览器不支持朗读', 'error');
       return;
     }
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(String(text ?? ''));
     u.lang = lang;
-    u.rate = 0.88;
+    // 单词读得慢一点便于跟读，句子用正常语速
+    u.rate = String(text).trim().split(/\s+/).length > 2 ? 0.92 : 0.86;
     u.pitch = 1;
     const voices = window.speechSynthesis.getVoices();
-    const v = voices.find((x) => x.lang?.toLowerCase().startsWith(lang.slice(0, 2)))
-      ?? voices.find((x) => /en/i.test(x.lang));
-    if (v) u.voice = v;
+    const prefer = lang.toLowerCase().startsWith('en')
+      ? voices.find((x) => /en-GB/i.test(x.lang)) ?? voices.find((x) => /^en/i.test(x.lang))
+      : voices.find((x) => x.lang?.toLowerCase().startsWith(lang.slice(0, 2)));
+    if (prefer) u.voice = prefer;
+    if (btn) {
+      const stop = () => btn.classList.remove('is-speaking');
+      u.onend = stop;
+      u.onerror = stop;
+      btn.classList.add('is-speaking');
+      // 兜底：某些浏览器 onend 不触发
+      window.setTimeout(stop, Math.max(2500, String(text).length * 90));
+    }
     window.speechSynthesis.speak(u);
   } catch (err) {
     console.warn('[words] 朗读失败', err);
   }
+}
+
+/** 行内小喇叭：点击朗读给定英文，朗读期间有呼吸动画 */
+export function speakInline(text: string, title = '朗读'): HTMLButtonElement {
+  const btn = h('button', {
+    type: 'button',
+    class: 'speak-inline',
+    title,
+    'aria-label': title,
+  });
+  btn.appendChild(pixelIcon('speaker', 15, { color: 'var(--moss-mid)' }));
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speak(text, 'en-US', btn);
+  });
+  return btn;
 }
 
 /* ------------------------------ 跟读录音 ------------------------------ */
@@ -153,8 +180,11 @@ function wordCard(word: Word, opts: { stage: 'new' | 'review'; onDone: () => voi
     body: [
       h('div', { class: 'small', style: 'margin-bottom:6px' }, h('b', null, word.meaning)),
       h('div', { class: 'quote-block' },
-        h('div', null, word.example),
-        h('div', { class: 'muted tiny', style: 'margin-top:4px' }, word.example_cn),
+        h('div', { class: 'quote-line' },
+          speakInline(word.example, '朗读例句'),
+          h('span', null, word.example),
+        ),
+        h('div', { class: 'muted tiny', style: 'margin-top:6px;padding-left:37px' }, word.example_cn),
       ),
     ],
     footer: [

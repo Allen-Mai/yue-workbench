@@ -20,7 +20,7 @@ import { store } from '../core/store';
 import { fmtDate, today } from '../core/date';
 import { award, coinsOn, settleDay } from '../core/coins';
 import { checkAchievements } from '../core/stats';
-import { renderWordStudy } from './words';
+import { renderWordStudy, speakInline } from './words';
 import { currentFilter, stats as wordStats } from '../core/words';
 import type { Course, Inspiration, Lesson, LessonExercise, LessonKind, ModuleCtx } from '../types';
 
@@ -67,6 +67,27 @@ function lessonHref(courseSlug: string, lesson: Lesson): string {
 function excerpt(text: string, len = 72): string {
   const s = String(text ?? '').replace(/\s+/g, ' ').trim();
   return s.length > len ? `${s.slice(0, len)}…` : s;
+}
+
+/** 从「中文讲解 + 英文例句」混排段落里抽出成句的英文（≥6 词才算，避免误抓单词） */
+function englishSentences(text: string): string[] {
+  const out: string[] = [];
+  for (const m of String(text ?? '').matchAll(/[A-Za-z][A-Za-z0-9 ,;:'"()\-]*?[.?!]/g)) {
+    const s = m[0].replace(/\s+/g, ' ').trim();
+    if (s.split(/\s+/).length >= 6) out.push(s);
+  }
+  return out;
+}
+
+/** 渲染一段讲解：含英文例句时，在段落最前面加一个可点击的朗读图标 */
+function bodyParagraph(para: string): HTMLElement {
+  const text = para.trim();
+  const en = englishSentences(text);
+  if (!en.length) return h('p', { style: 'margin:0 0 12px' }, text);
+  return h('div', { class: 'quote-line', style: 'margin:0 0 12px' },
+    speakInline(en.join(' '), '朗读本段英文例句'),
+    h('span', null, text),
+  );
 }
 
 /* ==========================================================================
@@ -351,7 +372,7 @@ function lessonView(el: HTMLElement, ctx: ModuleCtx, course: Course, lesson: Les
   const bodyEl = h('div', { class: 'article-body' });
   for (const para of String(lesson.body ?? '').split('\n')) {
     if (!para.trim()) continue;
-    bodyEl.appendChild(h('p', { style: 'margin:0 0 12px' }, para.trim()));
+    bodyEl.appendChild(bodyParagraph(para));
   }
 
   const head = Card({

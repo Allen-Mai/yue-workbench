@@ -495,6 +495,35 @@
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   font-size: var(--fs-sm); line-height: 1.9; color: var(--ink-soft);
 }
+.quote-line { display: flex; align-items: flex-start; gap: 9px; }
+.quote-line > span { flex: 1; min-width: 0; }
+
+/* 例句朗读按钮（行内小喇叭） */
+.speak-inline {
+  flex: 0 0 auto;
+  width: 28px; height: 28px; min-height: 28px;
+  margin-top: 1px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-green);
+  background: var(--moss-mist);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), background var(--dur-soft), box-shadow var(--dur-soft), border-color var(--dur-soft);
+}
+.speak-inline:hover {
+  background: var(--moss-soft);
+  border-color: var(--moss);
+  transform: scale(1.1);
+  box-shadow: 0 3px 10px rgba(90, 122, 74, 0.28);
+}
+.speak-inline:active { transform: scale(0.94); }
+.speak-inline.is-speaking {
+  background: var(--moss-soft);
+  border-color: var(--moss);
+  animation: pulse 1.5s var(--ease-soft) infinite;
+}
+.speak-inline:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(125, 191, 138, 0.3); }
 .article-body { font-size: var(--fs); line-height: 1.95; color: var(--ink-soft); word-break: break-word; }
 .article-body h3 { margin: var(--sp-4) 0 var(--sp-2); color: var(--ink); }
 .article-body img { border-radius: var(--r-sm); margin: var(--sp-3) 0; }
