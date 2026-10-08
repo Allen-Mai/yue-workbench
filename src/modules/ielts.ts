@@ -161,11 +161,16 @@ function hubView(el: HTMLElement, ctx: ModuleCtx, rerender: () => void): void {
     decor: true,
     icon: 'inspire',
     title: '雅思备考专区',
-    subtitle: '四门课逐课精讲 · 30 篇原创备考文章 · 1050 个核心词（听力 / 阅读 / 写作 / 口语）',
+    subtitle: `四门课逐课精讲 · ${listeningCount()} 篇原创听力练习 · ${list.length} 篇备考文章 · ${ws.ielts} 个核心词`,
+    actions: [
+      Button('听力练习库', { variant: 'primary', icon: 'speaker', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/listening') }),
+      Button('单词学习', { variant: 'soft', icon: 'book', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/words') }),
+    ],
     body: [
       h('div', { class: 'grid grid-auto' },
         Stat({ label: '课程', value: courses.length, unit: '门', tone: 'green', icon: 'inspire' }),
         Stat({ label: '已完成课数', value: `${doneLessons}/${allLessons.length}`, unit: '节', icon: 'check' }),
+        Stat({ label: '听力练习', value: listeningCount(), unit: '篇', tone: 'green', icon: 'speaker' }),
         Stat({ label: '备考文章', value: list.length, unit: '篇', tone: 'oak', icon: 'book' }),
         Stat({ label: '核心词库', value: ws.ielts, unit: '词', tone: 'honey', icon: 'leaf' }),
       ),
@@ -341,6 +346,12 @@ function courseView(el: HTMLElement, ctx: ModuleCtx, course: Course): void {
     title: course.title,
     subtitle: course.subtitle,
     actions: [
+      ...(course.slug === 'listening' && listeningCount() > 0
+        ? [Button(`听力练习库（${listeningCount()} 篇）`, {
+          variant: 'primary', icon: 'speaker', size: 'sm',
+          onClick: () => ctx.go('#/inspire/ielts/listening'),
+        })]
+        : []),
       Button('返回课程列表', { variant: 'ghost', icon: 'arrowLeft', size: 'sm', onClick: () => ctx.go('#/inspire/ielts/course') }),
     ],
     body: [

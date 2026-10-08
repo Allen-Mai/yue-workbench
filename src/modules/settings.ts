@@ -788,11 +788,15 @@ function aboutCard(): HTMLElement {
     ['备份状态', String(store.setting('lastBackupAt', '') ?? '') ? '已有备份记录' : '还没有备份过'],
   ];
 
+  // 仅本机的表（本地书架）不进内存缓存，用「本机独立」标签代替条数，避免显示成 0 条造成误解
+  const localOnly = db.LOCAL_ONLY_TABLES;
   const tableRows = db.TABLES.map((t) => ListRow({
-    icon: 'list',
-    title: exporter.TABLE_LABEL[t] ?? t,
+    icon: localOnly.has(t) ? 'lock' : 'list',
+    title: `${exporter.TABLE_LABEL[t] ?? t}${localOnly.has(t) ? '（仅本机，不上云/不导出）' : ''}`,
     meta: t,
-    right: Tag(`${store.count(t)} 条`, store.count(t) ? 'green' : 'line'),
+    right: localOnly.has(t)
+      ? Tag('本机独立', 'honey')
+      : Tag(`${store.count(t)} 条`, store.count(t) ? 'green' : 'line'),
   }));
 
   const tableCount = db.TABLES.length;

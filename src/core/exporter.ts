@@ -37,7 +37,8 @@ export function toCSV(rows: Array<Record<string, unknown>>): string {
 
 export const TABLE_LABEL: Record<string, string> = {
   todos: '待办', plants: '植物', plant_logs: '植物日记', inspirations: '灵感内容', quotes: '摘抄',
-  words: '单词', word_logs: '单词记录', accounts: '账户', transactions: '流水', fixed_items: '固定支出',
+  words: '单词', word_logs: '单词记录', courses: '雅思课程', lessons: '课程章节',
+  listenings: '听力练习', books: '本地书架', accounts: '账户', transactions: '流水', fixed_items: '固定支出',
   shopping: '购买清单', wishes: '心愿', gold_prices: '金价', couple: '情侣信息', couple_logs: '情侣日志',
   memos: '备忘录', reads: '阅读记录', reminders: '提醒', coins: '金币', achievements: '成就',
   settings: '设置', push_subs: '推送订阅',
