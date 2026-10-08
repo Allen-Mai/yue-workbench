@@ -9,7 +9,10 @@ import type { TableName, TableMap, RowOf, BaseRow } from '../types';
 import { uid } from '../ui/dom';
 
 export const DB_NAME = 'yue-workbench';
-export const DB_VERSION = 1;
+/** 版本历史：1 = 基础 21 张表；2 = 新增 courses / lessons（雅思课程）
+ *  注意：每新增一张表都必须把这里 +1，否则老用户的库里没有新表，
+ *  读取时会抛 NotFoundError。openDb() 里还有一层自愈兜底，双保险。 */
+export const DB_VERSION = 2;
 export const LOCAL_USER = 'local';
 
 export const TABLES: TableName[] = [
@@ -86,32 +89,49 @@ export async function persistImage(dataUrl: string, name = 'photo'): Promise<str
 }
 
 /* ------------------------------ 打开数据库 ------------------------------ */
+/** 建表（幂等）：升级时补齐所有缺失的 object store 与索引 */
+function upgradeDb(db: IDBDatabase): void {
+  for (const t of TABLES) {
+    if (db.objectStoreNames.contains(t)) continue;
+    const os = db.createObjectStore(t, { keyPath: 'id' });
+    os.createIndex('created_at', 'created_at');
+    os.createIndex('user_id', 'user_id');
+    if (DATE_TABLES.has(t)) os.createIndex('date', 'date');
+  }
+}
+
+function openAt(version?: number): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = version === undefined ? indexedDB.open(DB_NAME) : indexedDB.open(DB_NAME, version);
+    req.onupgradeneeded = () => upgradeDb(req.result);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error ?? new Error('IndexedDB 打开失败'));
+    req.onblocked = () => reject(new Error('本地数据库被其它标签页占用，请关闭本应用的其他标签页后刷新'));
+  });
+}
+
 function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') {
-      reject(new Error('当前环境不支持 IndexedDB'));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      for (const t of TABLES) {
-        if (db.objectStoreNames.contains(t)) continue;
-        const os = db.createObjectStore(t, { keyPath: 'id' });
-        os.createIndex('created_at', 'created_at');
-        os.createIndex('user_id', 'user_id');
-        if (DATE_TABLES.has(t)) os.createIndex('date', 'date');
-      }
-    };
-    req.onsuccess = () => {
-      const db = req.result;
+  const p = (async () => {
+    if (typeof indexedDB === 'undefined') throw new Error('当前环境不支持 IndexedDB');
+    let db = await openAt(DB_VERSION);
+    db.onversionchange = () => db.close();
+    // 自愈：若库里缺少任何一张表（忘记升版本 / 版本冲突），用更高版本重建缺失表
+    const missing = TABLES.filter((t) => !db.objectStoreNames.contains(t));
+    if (missing.length) {
+      console.warn('[db] 缺少数据表，正在自愈升级：', missing.join(', '));
+      const next = db.version + 1;
+      db.close();
+      db = await openAt(next);
       db.onversionchange = () => db.close();
-      resolve(db);
-    };
-    req.onerror = () => reject(req.error ?? new Error('IndexedDB 打开失败'));
+    }
+    return db;
+  })();
+  dbPromise = p;
+  return p.catch((err) => {
+    dbPromise = null; // 失败后允许重试
+    throw err;
   });
-  return dbPromise;
 }
 
 export async function ready(): Promise<void> {

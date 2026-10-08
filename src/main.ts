@@ -10,7 +10,7 @@ import './styles/ui.css';
 import { h, mount, clear, qs } from './ui/dom';
 import { pixelIcon, dogLine } from './ui/icons';
 import { initDecor, backgroundDots } from './ui/decor';
-import { Banner, Button, IconButton, Modal, Toast } from './ui/components';
+import { Banner, Button, IconButton, Modal, Toast, confirmDialog } from './ui/components';
 import { store, CONTENT_VERSION } from './core/store';
 import * as db from './core/db';
 import { router, type Route } from './core/router';
@@ -360,32 +360,92 @@ function maybeInstallHint(): void {
 }
 
 /* ------------------------------ 启动 ------------------------------ */
-async function boot(): Promise<void> {
-  initDecor();
-  buildShell();
+let bootSettled = false;
 
-  await store.init();
-  buildNav();
-  await setupCloud();
-  await dailyBoot();
+function hideSplash(): void {
+  setTimeout(() => document.getElementById('splash')?.classList.add('is-hidden'), 260);
+  setTimeout(() => document.getElementById('splash')?.remove(), 1200);
+}
 
-  router.on((route) => { void renderRoute(route); });
-  router.start();
-
-  // 雅思语料后台增量安装（不阻塞首屏；装好后提示并自动刷新当前页）
-  if (Number(store.setting('contentVersion', 1)) < CONTENT_VERSION) {
-    void store
-      .ensureContent((msg) => Toast(msg))
-      .then((res) => {
-        if (!res) return;
-        Toast(`雅思语料已就绪：${res.words} 个核心词 · ${res.articles} 篇备考文章 · ${res.courses} 门课程 ${res.lessons} 节`, 'success');
-        void renderRoute(router.route());
-      })
-      .catch((err) => {
-        console.error('[main] 雅思语料安装失败', err);
-        Toast('雅思语料安装失败，稍后会自动重试', 'error');
+/** 启动失败时的兜底界面：绝不把用户留在启动页上 */
+function showBootError(err: unknown): void {
+  const detail = err instanceof Error ? `${err.name}：${err.message}` : String(err);
+  const host = document.getElementById('content') ?? app;
+  const rebuild = async () => {
+    const ok = await confirmDialog(
+      '重建本地数据库？',
+      '这会清空本机 IndexedDB 里保存的数据（植物、账本、日志、雅思进度等）。如果已经开启云端同步，Supabase 上的数据不受影响，登录后会重新同步回来。',
+      { danger: true, okText: '重建并刷新' },
+    );
+    if (!ok) return;
+    try {
+      await new Promise<void>((resolve) => {
+        const req = indexedDB.deleteDatabase(db.DB_NAME);
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
       });
-  }
+    } catch {
+      /* 忽略：下面统一刷新 */
+    }
+    location.reload();
+  };
+
+  mount(
+    host,
+    h('div', { class: 'card', style: 'max-width:720px;margin:40px auto' },
+      h('div', { class: 'card-head' },
+        h('span', { class: 'card-head-icon' }, pixelIcon('seed', 20)),
+        h('div', null,
+          h('div', { class: 'card-title' }, '启动时遇到了一点问题'),
+          h('div', { class: 'card-sub' }, '数据仍然保存在本机，先别急着清空'),
+        ),
+      ),
+      h('div', { class: 'card-body' },
+        h('p', { class: 'small muted' }, '错误详情：'),
+        h('pre', {
+          style: 'white-space:pre-wrap;word-break:break-word;background:var(--paper-3);padding:10px 12px;border-radius:12px;font-size:12px;line-height:1.7;max-height:200px;overflow:auto',
+        }, detail),
+        h('p', { class: 'small muted', style: 'margin-top:12px' },
+          '常见原因：浏览器升级了应用版本、本地数据库被其它标签页占用、或浏览器处于无痕/隐私模式限制了本地存储。'
+          + '先点「重试」；如果反复失败，再考虑「重建本地数据库」。'),
+        h('div', { class: 'row row-wrap mt-4' },
+          Button('重试', { variant: 'primary', icon: 'refresh', onClick: () => location.reload() }),
+          Button('重建本地数据库', { variant: 'danger', icon: 'trash', onClick: () => void rebuild() }),
+          Button('打开设置页', { variant: 'ghost', icon: 'settings', onClick: () => { location.hash = '#/settings'; location.reload(); } }),
+        ),
+      ),
+    ),
+  );
+}
+
+async function boot(): Promise<void> {
+  try {
+    initDecor();
+    buildShell();
+
+    await store.init();
+    buildNav();
+    await setupCloud();
+    await dailyBoot();
+
+    router.on((route) => { void renderRoute(route); });
+    router.start();
+
+    // 雅思语料后台增量安装（不阻塞首屏；装好后提示并自动刷新当前页）
+    if (Number(store.setting('contentVersion', 1)) < CONTENT_VERSION) {
+      void store
+        .ensureContent((msg) => Toast(msg))
+        .then((res) => {
+          if (!res) return;
+          Toast(`雅思语料已就绪：${res.words} 个核心词 · ${res.articles} 篇备考文章 · ${res.courses} 门课程 ${res.lessons} 节`, 'success');
+          void renderRoute(router.route());
+        })
+        .catch((err) => {
+          console.error('[main] 雅思语料安装失败', err);
+          Toast('雅思语料安装失败，稍后会自动重试', 'error');
+        });
+    }
 
   store.on('change', () => {
     refreshCoins();
@@ -397,15 +457,29 @@ async function boot(): Promise<void> {
   window.addEventListener('beforeunload', () => { if (reminderTimer) clearInterval(reminderTimer); });
 
   // Service Worker（离线 + 推送）
+  // 只在生产环境注册：开发环境下 SW 可能用缓存的旧外壳造成「僵尸页面」
+  // （HTML 能打开，但 /src/*.ts 请求失败 → 永远停在启动页）。
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).then(
-        (reg) => {
-          reg.addEventListener('updatefound', () => console.info('[sw] 发现新版本，正在更新'));
-        },
-        (err) => console.warn('[sw] 注册失败', err),
-      );
-    });
+    if (import.meta.env.PROD) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then(
+          (reg) => {
+            reg.addEventListener('updatefound', () => console.info('[sw] 发现新版本，正在更新'));
+          },
+          (err) => console.warn('[sw] 注册失败', err),
+        );
+      });
+    } else {
+      // 开发环境：清掉历史遗留的注册与缓存，避免继续被旧外壳接管
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+        .then((done) => {
+          if (done.some(Boolean)) console.info('[sw] 开发环境已注销遗留 Service Worker，请刷新页面');
+          return caches?.keys?.().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+        })
+        .catch(() => undefined);
+    }
     navigator.serviceWorker.addEventListener('message', (ev) => {
       const data = ev.data as { type?: string; url?: string } | undefined;
       if (data?.type === 'navigate' && data.url) router.go(data.url);
@@ -425,15 +499,28 @@ async function boot(): Promise<void> {
     }, 2600);
   }
 
-  setTimeout(maybeInstallHint, 900);
-  setTimeout(() => document.getElementById('splash')?.classList.add('is-hidden'), 620);
-  setTimeout(() => document.getElementById('splash')?.remove(), 1600);
+    setTimeout(maybeInstallHint, 900);
+  } catch (err) {
+    console.error('[main] 启动失败', err);
+    showBootError(err);
+  } finally {
+    bootSettled = true;
+    hideSplash();
+  }
 }
 
 window.addEventListener('error', (e) => console.error('[global]', e.error ?? e.message));
 window.addEventListener('unhandledrejection', (e) => console.error('[promise]', e.reason));
 
+// 看门狗：任何情况下都不让用户停在启动页
+window.setTimeout(() => {
+  if (bootSettled) return;
+  console.error('[main] 启动超时');
+  showBootError(new Error('启动超时：可能是本地数据库异常、被其它标签页占用，或浏览器限制了本地存储。'));
+  hideSplash();
+}, 12000);
+
 void boot();
 
 /* 调试入口：控制台可用 window.__YWB 查看数据 */
-(window as unknown as Record<string, unknown>).__YWB = { store, router, notify, push, ymd };
+(window as unknown as Record<string, unknown>).__YWB = { store, router, notify, push, ymd, db };

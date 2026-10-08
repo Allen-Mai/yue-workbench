@@ -30,8 +30,11 @@
       font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;}
     #splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
       background:linear-gradient(180deg,#FDF8EC 0%,#F3EDD9 46%,#E4EEDD 74%,#C9DCC2 100%);
-      transition:opacity .55s cubic-bezier(.4,0,.2,1),visibility .55s;}
+      transition:opacity .55s cubic-bezier(.4,0,.2,1),visibility .55s;
+      /* 纯 CSS 兜底：即使 JS 完全没跑起来，10 秒后也自动淡出，绝不永久卡在启动页 */
+      animation:splash-giveup .6s ease 10s forwards}
     #splash.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+    @keyframes splash-giveup{to{opacity:0;visibility:hidden;pointer-events:none}}
     .sp-wrap{text-align:center;padding:24px;max-width:520px}
     .sp-motto{font-size:19px;letter-spacing:2px;color:#1A3C2A;margin-top:18px;text-shadow:0 1px 0 rgba(255,255,255,.6)}
     .sp-motto i{display:inline-block;font-style:normal;animation:sp-sway 3.6s cubic-bezier(.4,0,.2,1) infinite}
