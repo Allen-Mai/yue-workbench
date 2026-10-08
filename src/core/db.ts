@@ -10,10 +10,10 @@ import { uid } from '../ui/dom';
 
 export const DB_NAME = 'yue-workbench';
 /** 版本历史：1 = 基础 21 张表；2 = 新增 courses / lessons（雅思课程）；
- *  3 = 新增 listenings（原创听力练习）。
+ *  3 = 新增 listenings（原创听力练习）；4 = 新增 books（本地书架，仅本机）。
  *  注意：每新增一张表都必须把这里 +1，否则老用户的库里没有新表，
  *  读取时会抛 NotFoundError。openDb() 里还有一层自愈兜底，双保险。 */
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 export const LOCAL_USER = 'local';
 
 export const TABLES: TableName[] = [
@@ -21,7 +21,15 @@ export const TABLES: TableName[] = [
   'words', 'word_logs', 'courses', 'lessons', 'listenings', 'accounts', 'transactions', 'fixed_items',
   'shopping', 'wishes', 'gold_prices', 'couple', 'couple_logs',
   'memos', 'reads', 'reminders', 'coins', 'achievements', 'settings', 'push_subs',
+  'books',
 ];
+
+/**
+ * 仅保存在本机、**绝不上云、绝不导出**的表。
+ * 本地书架里放的是用户自己导入的电子书（多为版权作品），
+ * 上传到 Supabase 或写进导出文件都会造成版权内容外泄与体积爆炸。
+ */
+export const LOCAL_ONLY_TABLES = new Set<TableName>(['books']);
 
 /** 带 date 字段、需要建索引的表 */
 const DATE_TABLES = new Set<TableName>([
@@ -176,7 +184,7 @@ export async function put<K extends TableName>(table: K, row: Partial<RowOf<K>>)
   const full = normalize(table, row);
   await tx(table, 'readwrite', (s) => s.put(full) as IDBRequest<IDBValidKey>);
   fire(table, 'put');
-  if (remote) {
+  if (remote && !LOCAL_ONLY_TABLES.has(table)) {
     remote.put(table, full as unknown as BaseRow).catch((e) => console.warn('[db] 云端写入失败', table, e));
   }
   return full;
@@ -199,7 +207,7 @@ export async function bulkPut<K extends TableName>(
   });
   fire(table, 'bulk');
   // 云端：整表一次性 upsert，避免 N 次请求（批量导入 1000+ 条时尤其重要）
-  if (remote && opts.sync !== false) {
+  if (remote && opts.sync !== false && !LOCAL_ONLY_TABLES.has(table)) {
     remote.replaceAll(table, full as unknown as BaseRow[]).catch((e) => console.warn('[db] 云端批量写入失败', table, e));
   }
   return full.length;
@@ -225,7 +233,7 @@ export async function where<K extends TableName>(
 export async function remove(table: TableName, id: string): Promise<void> {
   await tx(table, 'readwrite', (s) => s.delete(id) as IDBRequest<undefined>);
   fire(table, 'remove');
-  if (remote) remote.remove(table, id).catch((e) => console.warn('[db] 云端删除失败', e));
+  if (remote && !LOCAL_ONLY_TABLES.has(table)) remote.remove(table, id).catch((e) => console.warn('[db] 云端删除失败', e));
 }
 
 export async function removeWhere<K extends TableName>(table: K, pred: (row: RowOf<K>) => boolean): Promise<number> {
@@ -262,6 +270,7 @@ export type ExportPayload = {
 export async function exportAll(): Promise<ExportPayload> {
   const tables: Partial<Record<TableName, unknown[]>> = {};
   for (const t of TABLES) {
+    if (LOCAL_ONLY_TABLES.has(t)) continue; // 本地书架不导出（版权内容 + 体积过大）
     const rows = await all(t);
     if (rows.length) tables[t] = rows;
   }
@@ -282,6 +291,7 @@ export async function importAll(
   let rowCount = 0;
   let tableCount = 0;
   for (const t of TABLES) {
+    if (LOCAL_ONLY_TABLES.has(t)) continue; // 本地书架不参与导入
     const rows = src?.[t];
     if (!Array.isArray(rows) || !rows.length) continue;
     tableCount++;

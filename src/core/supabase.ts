@@ -5,7 +5,7 @@
    ========================================================================== */
 
 import type { BaseRow, TableName } from '../types';
-import { TABLES, type RemoteAdapter } from './db';
+import { TABLES, LOCAL_ONLY_TABLES, type RemoteAdapter } from './db';
 
 const ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 export const SUPABASE_URL = (ENV.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '');
@@ -260,7 +260,7 @@ export function createAdapter(): RemoteAdapter {
       await ensureFresh();
       const out: Partial<Record<TableName, BaseRow[]>> = {};
       await Promise.all(
-        TABLES.map(async (t) => {
+        TABLES.filter((t) => !LOCAL_ONLY_TABLES.has(t)).map(async (t) => {
           try {
             const res = await req(`/rest/v1/${t}?select=*&limit=5000`);
             if (!res.ok) return;

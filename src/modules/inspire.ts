@@ -23,6 +23,7 @@ import { checkAchievements } from '../core/stats';
 import { QUOTE_TAGS } from '../data/presets';
 import { renderWordStudy } from './words';
 import { renderIelts } from './ielts';
+import { renderShelf } from './shelf';
 import type { Inspiration, ModuleCtx, Quote } from '../types';
 
 /* ------------------------------ 分类定义 ------------------------------ */
@@ -78,8 +79,12 @@ const KINDS: KindMeta[] = [
 
 const KIND_MAP: Record<string, KindMeta> = Object.fromEntries(KINDS.map((k) => [k.value, k]));
 
-/** 顶部 Segmented：5 个 inspirations 分类（kind 值唯一） */
-const SEGMENTS = KINDS.map((k) => ({ value: k.value as string, label: k.label }));
+/** 顶部 Segmented：5 个 inspirations 分类 + 雅思备考 + 我的书架 */
+const SEGMENTS = [
+  ...KINDS.map((k) => ({ value: k.value as string, label: k.label })),
+  { value: 'ielts', label: '雅思备考' },
+  { value: 'shelf', label: '我的书架' },
+].filter((v, i, arr) => arr.findIndex((x) => x.value === v.value) === i);
 
 const DEFAULT_KIND: ContentKind = 'book';
 
@@ -713,6 +718,12 @@ export const inspireModule = {
     // 雅思备考专区（课程 + 备考文章 + 核心词库，二级页自带三级路由）
     if (ctx.sub === 'ielts') {
       await renderIelts(el, ctx);
+      return;
+    }
+
+    // 我的书架（本机导入的电子书，仅本机存储）
+    if (ctx.sub === 'shelf') {
+      await renderShelf(el, ctx);
       return;
     }
 

@@ -21,7 +21,7 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.metals.dev https://api.gold-api.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.metals.dev https://api.gold-api.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'self' blob: https:; object-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
         }
       ]
     },

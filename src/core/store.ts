@@ -46,7 +46,14 @@ class Store {
 
   private async reload(): Promise<void> {
     const next = new Map<TableName, BaseRow[]>();
-    for (const t of db.TABLES) next.set(t, (await db.all(t)) as unknown as BaseRow[]);
+    for (const t of db.TABLES) {
+      // 仅本机的表（本地书架）不进内存缓存：把整本书与 PDF Blob 常驻内存毫无必要
+      if (db.LOCAL_ONLY_TABLES.has(t)) {
+        next.set(t, []);
+        continue;
+      }
+      next.set(t, (await db.all(t)) as unknown as BaseRow[]);
+    }
     this.cache = next;
     this.settings = { ...DEFAULT_SETTINGS };
     const sRows = (next.get('settings') ?? []) as unknown as Array<{ key: string; value: unknown }>;
@@ -290,6 +297,11 @@ class Store {
   /** 重新载入并广播（可指定表名，仅用于日志语义） */
   async refresh(table?: TableName, silent = false): Promise<void> {
     const next = new Map<TableName, BaseRow[]>();
+    if (table && db.LOCAL_ONLY_TABLES.has(table)) {
+      // 仅本机的表：不缓存，只广播变更让相关页面自行重载
+      this.emit('change', table);
+      return;
+    }
     if (table) {
       const rows = (await db.all(table)) as unknown as BaseRow[];
       next.set(table, rows);

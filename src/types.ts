@@ -291,6 +291,37 @@ export interface PushSubRow extends BaseRow {
   ua: string;
 }
 
+/* ------------------------------ 本地书架（仅本机，永不上云/导出） ------------------------------ */
+export interface BookChapterRow {
+  title: string;
+  text: string;
+}
+
+export interface BookRow extends BaseRow {
+  title: string;
+  author: string;
+  format: 'epub' | 'txt' | 'md' | 'pdf';
+  /** 封面 dataURL（可能为空） */
+  cover: string;
+  /** 已解析的章节（PDF 为空数组） */
+  chapters: BookChapterRow[];
+  /** 正文字符数 */
+  chars: number;
+  /** 原文件字节数 */
+  size: number;
+  /** PDF 等二进制格式的原始文件（Blob，仅本机保存） */
+  file?: Blob;
+  /* ---- 阅读进度 ---- */
+  lastChapter: number;
+  lastScroll: number;
+  /** 0–100 */
+  progress: number;
+  opened: number;
+  finished: boolean;
+  /** 手动归属的书架名（默认「我的书架」） */
+  shelf?: string;
+}
+
 /* ------------------------------ 表名映射 ------------------------------ */
 export interface TableMap {
   todos: Todo;
@@ -318,6 +349,7 @@ export interface TableMap {
   achievements: AchievementRow;
   settings: SettingRow;
   push_subs: PushSubRow;
+  books: BookRow;
 }
 export type TableName = keyof TableMap;
 export type RowOf<K extends TableName> = TableMap[K];
