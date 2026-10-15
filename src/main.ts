@@ -17,6 +17,7 @@ import { router, type Route } from './core/router';
 import { notify } from './core/notify';
 import { push } from './core/push';
 import { syncPlantTodos, careInfo } from './core/plants';
+import { FEATURES } from './core/features';
 import { settleDay, checkPopups, totalCoins } from './core/coins';
 import { checkAchievements } from './core/stats';
 import { supabase } from './core/supabase';
@@ -273,12 +274,14 @@ function tick(): void {
     notify.push({ title, text: body, tone: 'remind', icon: 'remind', system: true, tag, onClick: () => router.go('#/remind') });
   }
 
-  // 植物养护：到点兜底提醒（每天一次）
-  const plantTag = `plant-${date}`;
-  if (!firedTags.has(plantTag) && hhmm >= '08:00') {
-    firedTags.add(plantTag);
-    const due = store.list('plants').filter((p) => careInfo(p, date).due);
-    if (due.length) notify.push({ title: '🌿 今天有植物要照顾', text: `${due.length} 株植物到养护日了，今日中枢已自动生成待办`, tone: 'remind', icon: 'plant' });
+  // 植物养护：到点兜底提醒（每天一次）—— 已隐藏时整段跳过，见 core/features.ts
+  if (FEATURES.plants) {
+    const plantTag = `plant-${date}`;
+    if (!firedTags.has(plantTag) && hhmm >= '08:00') {
+      firedTags.add(plantTag);
+      const due = store.list('plants').filter((p) => careInfo(p, date).due);
+      if (due.length) notify.push({ title: '🌿 今天有植物要照顾', text: `${due.length} 株植物到养护日了，今日中枢已自动生成待办`, tone: 'remind', icon: 'plant' });
+    }
   }
 
   // 每月 1 日：备份提醒
@@ -300,7 +303,7 @@ function tick(): void {
 async function dailyBoot(): Promise<void> {
   const date = today();
   await store.ensureMonth();
-  await syncPlantTodos(date);
+  if (FEATURES.plants) await syncPlantTodos(date);
   await settleDay(date, true);
   await checkAchievements(true);
   await checkPopups();

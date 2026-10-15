@@ -11,7 +11,11 @@ import {
 } from '../ui/components';
 import { barChart, heatmap, lineChart } from '../ui/charts';
 import { store } from '../core/store';
+import { FEATURES } from '../core/features';
 import { BADGES } from '../data/presets';
+
+/** 成就殿堂展示的徽章：植物养护隐藏时，「植物达人」一并隐藏（定义仍保留在 BADGES 里） */
+const VISIBLE_BADGES = FEATURES.plants ? BADGES : BADGES.filter((b) => b.key !== 'plantmaster');
 import { activityDays, checkAchievements, computeStats, weekCoinBreakdown } from '../core/stats';
 import { totalCoins, weeklyTrend } from '../core/coins';
 import { fmtDate, today, weekStart, ymd } from '../core/date';
@@ -25,7 +29,9 @@ function coinsOfThisWeek(): number {
 }
 
 function unlockedCount(): number {
-  return store.list('achievements').length;
+  // 只统计当前可见的徽章，避免「已隐藏的徽章」把分子算多
+  const keys = new Set(VISIBLE_BADGES.map((b) => b.key));
+  return store.list('achievements').filter((a) => keys.has(String(a.key))).length;
 }
 
 function topBreakdownItem(): { label: string; value: number } | null {
@@ -65,7 +71,7 @@ function cardText(): string {
   lines.push(`本周金币总数：${coinsOfThisWeek().toFixed(1)} 枚`);
   lines.push(`最高单项：${top ? `${top.label} ${top.value.toFixed(1)} 枚` : '本周还没有金币入账'}`);
   lines.push(`连续打卡天数：${stats.streak} 天`);
-  lines.push(`解锁徽章数：${unlockedCount()} / ${BADGES.length}`);
+  lines.push(`解锁徽章数：${unlockedCount()} / ${VISIBLE_BADGES.length}`);
   lines.push('');
   lines.push('【本周金币明细】');
   for (const it of weekCoinBreakdown()) lines.push(`· ${it.label}：${it.value.toFixed(1)} 枚`);
@@ -77,7 +83,7 @@ function cardText(): string {
   lines.push(`· 连续全勤：${stats.streak} 天`);
   lines.push(`· 累计阅读：${stats.readCount} 篇`);
   lines.push(`· 累计省钱：${stats.savedTotal} 元`);
-  lines.push(`· 植物记录：${stats.plantDays} 天`);
+  if (FEATURES.plants) lines.push(`· 植物记录：${stats.plantDays} 天`);
   lines.push(`· 金币总额：${stats.coinsTotal.toFixed(1)} 枚`);
   lines.push(`· 在一起：${stats.coupleDays} 天`);
   lines.push('');
@@ -109,7 +115,7 @@ function cardPreview(): HTMLElement {
         Stat({ label: '本周金币总数', value: coinsOfThisWeek().toFixed(1), unit: '枚', tone: 'honey', icon: 'coin' }),
         Stat({ label: '最高单项', value: top ? `${top.label} ${top.value.toFixed(1)}` : '暂无', tone: 'green', icon: 'star' }),
         Stat({ label: '连续打卡', value: stats.streak, unit: '天', tone: 'green', icon: 'fire' }),
-        Stat({ label: '解锁徽章', value: `${unlockedCount()}/${BADGES.length}`, unit: '个', tone: 'honey', icon: 'trophy' }),
+        Stat({ label: '解锁徽章', value: `${unlockedCount()}/${VISIBLE_BADGES.length}`, unit: '个', tone: 'honey', icon: 'trophy' }),
       ),
       h('div', { class: 'tiny muted mt-3' },
         '「一键保存」与「分享」都会导出一份纯文本卡片（成就卡片-YYYY-MM-DD.txt），保存后本周不会重复弹窗。'),
@@ -170,7 +176,7 @@ function badgeWall(): HTMLElement {
   const have = new Map(store.list('achievements').map((a) => [a.key, a]));
   const stats = computeStats();
   return h('div', { class: 'badge-wall' },
-    ...BADGES.map((b) => {
+    ...VISIBLE_BADGES.map((b) => {
       const got = have.get(b.key);
       const unlocked = !!got;
       const box = h('div', {
@@ -192,7 +198,7 @@ function badgeWall(): HTMLElement {
 async function page(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
   const stats = computeStats();
   const unlocked = unlockedCount();
-  const pct = (unlocked / Math.max(1, BADGES.length)) * 100;
+  const pct = (unlocked / Math.max(1, VISIBLE_BADGES.length)) * 100;
   const breakdown = weekCoinBreakdown();
   const trend = weeklyTrend(7);
   const days = activityDays(28);
@@ -215,7 +221,7 @@ async function page(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
         variant: 'green',
         decor: true,
         icon: 'trophy',
-        title: `已解锁 ${unlocked} / ${BADGES.length} 个成就`,
+        title: `已解锁 ${unlocked} / ${VISIBLE_BADGES.length} 个成就`,
         subtitle: `金币总额 ${totalCoins().toFixed(1)} 枚 · 连续全勤 ${stats.streak} 天`,
         actions: [
           Button('检查新成就', {
@@ -237,7 +243,7 @@ async function page(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
         ],
         body: [
           h('div', { class: 'grid grid-auto' },
-            Stat({ label: '已解锁成就', value: `${unlocked}/${BADGES.length}`, unit: '个', tone: 'honey', icon: 'trophy' }),
+            Stat({ label: '已解锁成就', value: `${unlocked}/${VISIBLE_BADGES.length}`, unit: '个', tone: 'honey', icon: 'trophy' }),
             Stat({ label: '本周金币', value: coinsOfThisWeek().toFixed(1), unit: '枚', tone: 'green', icon: 'coin' }),
             Stat({ label: '连续全勤', value: stats.streak, unit: '天', tone: 'oak', icon: 'fire' }),
             Stat({ label: '在一起', value: stats.coupleDays, unit: '天', tone: 'green', icon: 'heart' }),
@@ -272,7 +278,7 @@ async function page(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
       Card({
         icon: 'trophy',
         title: '徽章墙',
-        actions: [Tag(`${unlocked} / ${BADGES.length}`, unlocked ? 'honey' : 'line')],
+        actions: [Tag(`${unlocked} / ${VISIBLE_BADGES.length}`, unlocked ? 'honey' : 'line')],
         body: badgeWall(),
         footer: [h('span', { class: 'tiny muted' },
           '未解锁的徽章会显示当前进度；达到条件后点「检查新成就」即可点亮，解锁时会自动弹出庆祝横幅。')],
@@ -298,7 +304,7 @@ async function page(el: HTMLElement, ctx: ModuleCtx): Promise<void> {
               Stat({ label: '连续全勤', value: stats.streak, unit: '天', tone: 'green', icon: 'fire' }),
               Stat({ label: '累计阅读', value: stats.readCount, unit: '篇', tone: 'oak', icon: 'book' }),
               Stat({ label: '累计省钱', value: stats.savedTotal, unit: '元', tone: 'honey', icon: 'piggy' }),
-              Stat({ label: '植物记录', value: stats.plantDays, unit: '天', tone: 'green', icon: 'plant' }),
+              ...(FEATURES.plants ? [Stat({ label: '植物记录', value: stats.plantDays, unit: '天', tone: 'green', icon: 'plant' })] : []),
               Stat({ label: '金币总额', value: stats.coinsTotal.toFixed(1), unit: '枚', tone: 'honey', icon: 'coin' }),
               Stat({ label: '在一起', value: stats.coupleDays, unit: '天', tone: 'green', icon: 'heart' }),
             ),

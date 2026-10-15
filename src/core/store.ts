@@ -7,6 +7,7 @@
 import type { Account, AccountKind, BaseRow, TableName, TableMap, RowOf, Couple } from '../types';
 import * as db from './db';
 import { DEFAULT_SETTINGS, PRESET_FIXED_ITEMS, PRESET_INSPIRATIONS, PRESET_PLANTS, PRESET_QUOTES, PRESET_WORDS, DAILY_BASE } from '../data/presets';
+import { FEATURES } from './features';
 import { daysOfThisMonth, today, ym } from './date';
 
 export type StoreEvent = 'change' | 'route' | 'toast' | 'banner' | 'coins' | 'ready' | 'appearance' | 'cloud';
@@ -73,10 +74,13 @@ class Store {
     }));
     await db.bulkPut('accounts', accounts);
 
-    await db.bulkPut('plants', PRESET_PLANTS.map((p, i) => ({
-      name: p.name, category: p.category, status: p.status, note: p.note,
-      planted_at: t, created_at: Date.now() - (PRESET_PLANTS.length - i) * 1000,
-    })));
+    // 植物养护已隐藏时不再播种预设植物（已有数据保留）
+    if (FEATURES.plants) {
+      await db.bulkPut('plants', PRESET_PLANTS.map((p, i) => ({
+        name: p.name, category: p.category, status: p.status, note: p.note,
+        planted_at: t, created_at: Date.now() - (PRESET_PLANTS.length - i) * 1000,
+      })));
+    }
 
     await db.bulkPut('words', PRESET_WORDS.map((w, i) => ({
       ...w, date: '', stage: 'new' as const, learned: false,

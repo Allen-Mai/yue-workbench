@@ -14,6 +14,7 @@ import { store } from '../core/store';
 import * as db from '../core/db';
 import { addDays, fmtDate, fmtMoney, nowTime, today, ymd, WEEK_CN } from '../core/date';
 import { syncPlantTodos, careInfo, taskTitle, latestPhoto } from '../core/plants';
+import { FEATURES } from '../core/features';
 import { STUDY_ITEMS } from '../data/presets';
 import { award, coinsOn, dayVariableSpend, totalCoins, settleDay } from '../core/coins';
 import { checkAchievements, isFullDay, streak } from '../core/stats';
@@ -240,7 +241,7 @@ export const hubModule = {
     }
 
     const date = today();
-    await syncPlantTodos(date);
+    if (FEATURES.plants) await syncPlantTodos(date);
     await ensureStudyTodos(date);
 
     const todos = store.list('todos')
@@ -328,8 +329,8 @@ export const hubModule = {
       footer: [h('span', { class: 'tiny muted' }, `English 会打开单词学习（雅思核心词库，每日 5 个新词 + 5 个复习）· 每项 +0.2 金币（每日上限 ${STUDY_DAILY_CAP}）`)],
     });
 
-    /* -------- 植物养护汇总 -------- */
-    const plantCard = Card({
+    /* -------- 植物养护汇总（已隐藏，开关见 core/features.ts）-------- */
+    const plantCard = FEATURES.plants ? Card({
       icon: 'plant',
       title: '植物养护提醒',
       actions: [Button('去花园', { variant: 'soft', icon: 'arrowRight', size: 'sm', onClick: () => ctx.go('#/plants') })],
@@ -348,7 +349,7 @@ export const hubModule = {
           });
         }))
         : EmptyState({ icon: 'leaf', title: '今天没有到期的养护任务', text: '植物们都在安静生长，去花园看看它们吧。' }),
-    });
+    }) : null;
 
     /* -------- 五账户速览 -------- */
     const accountCards = accounts.map((a) => {
@@ -444,7 +445,7 @@ export const hubModule = {
           Button('背单词', { variant: 'soft', icon: 'book', size: 'sm', onClick: () => ctx.go('#/hub/words') }),
           Button('写情侣日志', { variant: 'soft', icon: 'heart', size: 'sm', onClick: () => ctx.go('#/capsule/couple') }),
           Button('记一笔账', { variant: 'soft', icon: 'money', size: 'sm', onClick: () => ctx.go('#/wealth') }),
-          Button('看看花园', { variant: 'soft', icon: 'plant', size: 'sm', onClick: () => ctx.go('#/plants') }),
+          ...(FEATURES.plants ? [Button('看看花园', { variant: 'soft', icon: 'plant', size: 'sm', onClick: () => ctx.go('#/plants') })] : []),
           Button('添加提醒', { variant: 'soft', icon: 'remind', size: 'sm', onClick: () => ctx.go('#/remind') }),
           Button('写备忘录', { variant: 'soft', icon: 'diary', size: 'sm', onClick: () => ctx.go('#/capsule/memo') }),
         ),
