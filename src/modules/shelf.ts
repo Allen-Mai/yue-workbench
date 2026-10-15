@@ -376,12 +376,63 @@ async function renderReader(el: HTMLElement, ctx: ModuleCtx, bookId: string): Pr
       if (!t) continue;
       contentHost.appendChild(h('p', { class: 'reader-para' }, t));
     }
+    // 章末翻页条跟在正文最后一段之后
+    contentHost.appendChild(footHost);
+    paintFoot();
     if (restoreScroll) {
       const y = Number(book.lastScroll || 0);
       window.setTimeout(() => window.scrollTo({ top: y, behavior: 'auto' }), 60);
     } else {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
+  };
+
+  /* -------- 章末翻页条 --------
+     读完一章时人已经在正文末尾，再划回顶部去点「下一章」又慢又容易点错。
+     这里把翻页控件内联到正文末尾（CONTRACT 禁止底部 Tab / 悬浮窗，故不做吸底固定）。 */
+  let finished = Boolean(book.finished);
+  const footHost = h('div', { class: 'reader-foot' });
+
+  const paintFoot = () => {
+    clear(footHost);
+    if (!chapters.length) return;
+    const atFirst = chapterIndex <= 0;
+    const atLast = chapterIndex >= chapters.length - 1;
+
+    footHost.appendChild(h('div', { class: 'reader-foot-hint' },
+      atLast
+        ? (finished ? '这本书已经读完啦 🌿' : '已经是最后一章了')
+        : `第 ${chapterIndex + 1} / ${chapters.length} 章 · 读完继续`));
+
+    footHost.appendChild(h('div', { class: 'reader-foot-row' },
+      Button('上一章', {
+        variant: 'soft', icon: 'arrowLeft', size: 'sm',
+        disabled: atFirst,
+        title: atFirst ? '已经是第一章' : '上一章',
+        onClick: () => goChapter(chapterIndex - 1),
+      }),
+      atLast
+        ? Button(finished ? '已读完' : '标记为已读完', {
+          variant: 'primary', icon: 'check', size: 'sm',
+          disabled: finished,
+          onClick: () => { void markFinished(); },
+        })
+        : Button('下一章', {
+          variant: 'primary', icon: 'arrowRight', size: 'sm',
+          onClick: () => goChapter(chapterIndex + 1),
+        }),
+      Button('回到顶部', {
+        variant: 'ghost', icon: 'arrowUp', size: 'sm',
+        onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      }),
+    ));
+  };
+
+  const markFinished = async () => {
+    finished = true;
+    await db.patch('books', book.id, { finished: true, progress: 100 });
+    Toast('已标记为读完 🌿', 'success');
+    paintFoot();
   };
 
   const goChapter = (i: number) => {
@@ -483,10 +534,7 @@ async function renderReader(el: HTMLElement, ctx: ModuleCtx, bookId: string): Pr
     chapterIndex >= chapters.length - 1
       ? Button('标记为已读完', {
         variant: 'soft', icon: 'check', size: 'sm',
-        onClick: async () => {
-          await db.patch('books', book.id, { finished: true, progress: 100 });
-          Toast('已标记为读完 🌿', 'success');
-        },
+        onClick: () => { void markFinished(); },
       })
       : null,
   );
@@ -497,7 +545,7 @@ async function renderReader(el: HTMLElement, ctx: ModuleCtx, bookId: string): Pr
   mount(el,
     head,
     Card({ icon: 'book', title: '正文', actions: [chapterNav], body: contentHost, footer: [
-      h('span', { class: 'tiny muted' }, '阅读位置会自动记住；回到书架后点「继续阅读」可从这里接着看。'),
+      h('span', { class: 'tiny muted' }, '章末就有翻页按钮，不必再划回顶部；阅读位置会自动记住，回到书架后点「继续阅读」可接着看。'),
     ] }),
   );
 

@@ -520,6 +520,24 @@
 .reader-para { margin: 0 0 1.05em; text-indent: 2em; }
 .reader-para:first-of-type { text-indent: 2em; }
 
+/* 章末翻页条：内联在正文末尾（契约禁止悬浮窗，故不做吸底固定） */
+.reader-foot {
+  margin: 2.4em 0 0.2em;
+  padding-top: 1.2em;
+  border-top: 1px dashed var(--line);
+}
+.reader-foot-hint {
+  text-align: center;
+  font-size: var(--fs-xs);
+  letter-spacing: 1px;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+.reader-foot-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  align-items: center; justify-content: center;
+}
+
 /* ============================== 音频精听播放器 ============================== */
 .audio-track { position: relative; margin: 12px 0 6px; padding-top: 8px; }
 .audio-ab-wrap { position: absolute; left: 0; right: 0; top: 0; height: 6px; }
