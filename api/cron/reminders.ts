@@ -6,7 +6,7 @@
    实现每 15 分钟精确定时推送。
    ========================================================================== */
 
-import { beijingHHmm, beijingToday, cloudReady, cronAuthorized, json, pushReady, runReminderPush } from '../_shared';
+import { beijingHHmm, beijingToday, cloudReady, cronAuthorized, json, pushReady, runReminderPush } from '../_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function handler(req: any, res: any): Promise<void> {

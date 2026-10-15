@@ -1,0 +1,10 @@
+{
+  "//": "Vercel Serverless Functions 的独立类型环境：需要 Node 全局类型（process / Buffer）。",
+  "//2": "src/ 目录仍由根 tsconfig.json 检查，类型互不污染（前端不会拿到 process）。",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

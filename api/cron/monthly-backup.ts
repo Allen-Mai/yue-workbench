@@ -2,7 +2,7 @@
    api/cron/monthly-backup.ts · 每月 1 日：提醒导出备份（规格强制）
    ========================================================================== */
 
-import { beijingToday, cloudReady, cronAuthorized, json, pushReady, sendPush } from '../_shared';
+import { beijingToday, cloudReady, cronAuthorized, json, pushReady, sendPush } from '../_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function handler(req: any, res: any): Promise<void> {

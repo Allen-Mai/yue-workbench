@@ -4,7 +4,7 @@
    DELETE { endpoint }                       → 删除订阅
    ========================================================================== */
 
-import { cloudReady, del, json, readBody, upsert } from '../_shared';
+import { cloudReady, del, json, readBody, upsert } from '../_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function handler(req: any, res: any): Promise<void> {

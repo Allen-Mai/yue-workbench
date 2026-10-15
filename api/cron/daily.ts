@@ -5,7 +5,7 @@
 
 import {
   beijingHHmm, beijingToday, cloudReady, cronAuthorized, diffDays, json, pushReady, runReminderPush, select, sendPush,
-} from '../_shared';
+} from '../_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function handler(req: any, res: any): Promise<void> {

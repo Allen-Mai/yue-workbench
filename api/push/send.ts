@@ -3,7 +3,7 @@
    POST { title, body, url?, tag? }  需 Authorization: Bearer <CRON_SECRET>
    ========================================================================== */
 
-import { cronAuthorized, json, pushReady, readBody, sendPush } from '../_shared';
+import { cronAuthorized, json, pushReady, readBody, sendPush } from '../_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function handler(req: any, res: any): Promise<void> {

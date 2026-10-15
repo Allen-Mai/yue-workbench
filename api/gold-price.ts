@@ -5,7 +5,7 @@
    domestic = 国内金价（人民币/克，含税费溢价的估算）
    ========================================================================== */
 
-import { json } from './_shared';
+import { json } from './_shared.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const OZ_TO_GRAM = 31.1034768;
